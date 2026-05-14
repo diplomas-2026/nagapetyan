@@ -9,5 +9,4 @@ public class NagapetyanApiApplication {
     public static void main(String[] args) {
         SpringApplication.run(NagapetyanApiApplication.class, args);
     }
-
 }

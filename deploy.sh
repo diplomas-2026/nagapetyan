@@ -13,7 +13,7 @@ echo "Sync repository..."
 
 echo "Build ${APP_NAME}-api..."
 cd "$API_DIR"
-./gradlew build
+#./gradlew build
 
 echo "Copy jar to release..."
 mkdir -p release
