@@ -74,6 +74,15 @@ public class MemberService {
                 .toList();
     }
 
+    public com.github.danbel.nagapetyanapi.dto.MemberResponse getMemberResponse(ActorContext context, Long organizationId, Long memberId) {
+        accessService.requireOrganizationRead(context, organizationId);
+        OrganizationMember member = accessService.requireMember(memberId);
+        if (!organizationId.equals(member.getOrganizationId())) {
+            throw new ResponseStatusException(NOT_FOUND, "Сотрудник не найден в организации");
+        }
+        return mapperService.toMemberResponse(member);
+    }
+
     public com.github.danbel.nagapetyanapi.dto.MemberResponse createMemberResponse(ActorContext context, Long organizationId, MemberRequest request) {
         return mapperService.toMemberResponse(createMember(context, organizationId, request));
     }

@@ -35,6 +35,14 @@ public class MemberController {
         return memberService.listMemberResponses(new ActorContext(role, organizationHeaderId), organizationId);
     }
 
+    @GetMapping("/{memberId}")
+    public MemberResponse get(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
+                              @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,
+                              @PathVariable Long organizationId,
+                              @PathVariable Long memberId) {
+        return memberService.getMemberResponse(new ActorContext(role, organizationHeaderId), organizationId, memberId);
+    }
+
     @PostMapping
     public MemberResponse create(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
                                  @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,

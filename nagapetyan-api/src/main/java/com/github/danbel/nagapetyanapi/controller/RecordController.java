@@ -43,6 +43,14 @@ public class RecordController {
         return recordService.listRecordResponses(new ActorContext(role, organizationHeaderId), organizationId);
     }
 
+    @GetMapping("/{recordId}")
+    public LogisticsRecordResponse get(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
+                                       @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,
+                                       @PathVariable Long organizationId,
+                                       @PathVariable Long recordId) {
+        return recordService.getRecordResponse(new ActorContext(role, organizationHeaderId), organizationId, recordId);
+    }
+
     @PostMapping
     public LogisticsRecordResponse create(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
                                           @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,

@@ -66,6 +66,15 @@ public class RecordService {
                 .toList();
     }
 
+    public com.github.danbel.nagapetyanapi.dto.LogisticsRecordResponse getRecordResponse(ActorContext context, Long organizationId, Long recordId) {
+        accessService.requireOrganizationRead(context, organizationId);
+        LogisticsRecord record = store.getRecord(recordId);
+        if (record == null || !organizationId.equals(record.getOrganizationId())) {
+            throw new ResponseStatusException(NOT_FOUND, "Запись не найдена");
+        }
+        return mapperService.toRecordResponse(record);
+    }
+
     public com.github.danbel.nagapetyanapi.dto.LogisticsRecordResponse createRecordResponse(ActorContext context, Long organizationId, LogisticsRecordRequest request) {
         return mapperService.toRecordResponse(createRecord(context, organizationId, request));
     }

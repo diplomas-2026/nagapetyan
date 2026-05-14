@@ -38,16 +38,21 @@ async function request(path, { method = 'GET', body, role, organizationId, isFor
 }
 
 export const api = {
+  registerOwner: (body) => request('/auth/register', { method: 'POST', body }),
   getOrganizations: (role, organizationId) => request('/organizations', { role, organizationId }),
+  getOrganization: (role, organizationId, targetOrganizationId) =>
+    request(`/organizations/${targetOrganizationId}`, { role, organizationId }),
   createOrganization: (role, organizationId, body) => request('/organizations', { method: 'POST', role, organizationId, body }),
   updateOrganization: (role, organizationId, body) => request(`/organizations/${organizationId}`, { method: 'PUT', role, organizationId, body }),
   deleteOrganization: (role, organizationId) => request(`/organizations/${organizationId}`, { method: 'DELETE', role, organizationId }),
   getDashboard: (role, organizationId) => request(`/organizations/${organizationId}/dashboard`, { role, organizationId }),
   getMembers: (role, organizationId) => request(`/organizations/${organizationId}/members`, { role, organizationId }),
+  getMember: (role, organizationId, memberId) => request(`/organizations/${organizationId}/members/${memberId}`, { role, organizationId }),
   createMember: (role, organizationId, body) => request(`/organizations/${organizationId}/members`, { method: 'POST', role, organizationId, body }),
   updateMember: (role, organizationId, memberId, body) => request(`/organizations/${organizationId}/members/${memberId}`, { method: 'PUT', role, organizationId, body }),
   deleteMember: (role, organizationId, memberId) => request(`/organizations/${organizationId}/members/${memberId}`, { method: 'DELETE', role, organizationId }),
   getReports: (role, organizationId) => request(`/organizations/${organizationId}/reports`, { role, organizationId }),
+  getReport: (role, organizationId, reportId) => request(`/organizations/${organizationId}/reports/${reportId}`, { role, organizationId }),
   createReport: (role, organizationId, body) => request(`/organizations/${organizationId}/reports`, { method: 'POST', role, organizationId, body }),
   updateReport: (role, organizationId, reportId, body) => request(`/organizations/${organizationId}/reports/${reportId}`, { method: 'PUT', role, organizationId, body }),
   deleteReport: (role, organizationId, reportId) => request(`/organizations/${organizationId}/reports/${reportId}`, { method: 'DELETE', role, organizationId }),

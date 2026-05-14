@@ -1,0 +1,106 @@
+import { useEffect, useState } from 'react';
+import { Button, Card, CardContent, FormControl, InputLabel, MenuItem, Select, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { api } from '../api';
+import { AppLayout } from '../components/AppLayout';
+import { useSession } from '../hooks/useSession';
+import { useOrganizations } from '../hooks/useOrganizations';
+
+const emptyReport = {
+  shipmentNumber: '',
+  routeFrom: '',
+  routeTo: '',
+  shippedAt: '',
+  plannedDeliveryDate: '',
+  deliveredAt: '',
+  status: 'IN_TRANSIT',
+  responsibleDepartment: '',
+  note: '',
+};
+
+export function ReportFormPage({ mode }) {
+  const navigate = useNavigate();
+  const { organizationId, reportId } = useParams();
+  const isEdit = mode === 'edit';
+  const { role, setRole, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
+  const { organizations } = useOrganizations(role, sessionOrganizationId);
+  const [form, setForm] = useState(emptyReport);
+  const [message, setMessage] = useState(null);
+
+  function handleOrganizationChange(nextOrganizationId) {
+    setOrganizationId(nextOrganizationId);
+    if (nextOrganizationId) {
+      navigate(`/organizations/${nextOrganizationId}`);
+    }
+  }
+
+  useEffect(() => {
+    if (isEdit) {
+      api.getReport(role, organizationId, reportId).then(setForm).catch((error) => setMessage(error.message));
+    }
+  }, [isEdit, organizationId, reportId, role]);
+
+  async function save() {
+    try {
+      if (isEdit) {
+        await api.updateReport(role, organizationId, reportId, form);
+        navigate(`/organizations/${organizationId}/reports/${reportId}`);
+        return;
+      }
+      const created = await api.createReport(role, organizationId, form);
+      navigate(`/organizations/${organizationId}/reports/${created.id}`);
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
+  return (
+    <AppLayout
+      title="Логистика и отчетность"
+      subtitle={isEdit ? 'Редактирование отчета' : 'Новый отчет'}
+      role={role}
+      organizationId={sessionOrganizationId}
+      organizations={organizations}
+      onRoleChange={setRole}
+      onOrganizationChange={handleOrganizationChange}
+      onLogout={() => {
+        clearSession();
+        navigate('/login');
+      }}
+    >
+      <Card>
+        <CardContent>
+          <Stack spacing={3}>
+            <Typography variant="h4">{isEdit ? 'Редактирование отчета' : 'Новый отчет'}</Typography>
+            <TextField label="Номер отправления" value={form.shipmentNumber} onChange={(event) => setForm({ ...form, shipmentNumber: event.target.value })} fullWidth />
+            <TextField label="Откуда" value={form.routeFrom} onChange={(event) => setForm({ ...form, routeFrom: event.target.value })} fullWidth />
+            <TextField label="Куда" value={form.routeTo} onChange={(event) => setForm({ ...form, routeTo: event.target.value })} fullWidth />
+            <TextField label="Дата отправки" type="date" value={form.shippedAt} onChange={(event) => setForm({ ...form, shippedAt: event.target.value })} InputLabelProps={{ shrink: true }} fullWidth />
+            <TextField label="Плановая дата доставки" type="date" value={form.plannedDeliveryDate} onChange={(event) => setForm({ ...form, plannedDeliveryDate: event.target.value })} InputLabelProps={{ shrink: true }} fullWidth />
+            <TextField label="Фактическая дата доставки" type="date" value={form.deliveredAt} onChange={(event) => setForm({ ...form, deliveredAt: event.target.value })} InputLabelProps={{ shrink: true }} fullWidth />
+            <FormControl fullWidth>
+              <InputLabel>Статус</InputLabel>
+              <Select value={form.status} label="Статус" onChange={(event) => setForm({ ...form, status: event.target.value })}>
+                <MenuItem value="IN_TRANSIT">В пути</MenuItem>
+                <MenuItem value="DELIVERED">Доставлено</MenuItem>
+                <MenuItem value="DELAYED">С задержкой</MenuItem>
+                <MenuItem value="CANCELED">Отменено</MenuItem>
+              </Select>
+            </FormControl>
+            <TextField label="Ответственное подразделение" value={form.responsibleDepartment} onChange={(event) => setForm({ ...form, responsibleDepartment: event.target.value })} fullWidth />
+            <TextField label="Комментарий" value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} fullWidth multiline minRows={3} />
+            <Stack direction="row" spacing={2} flexWrap="wrap">
+              <Button variant="contained" onClick={save}>
+                Сохранить
+              </Button>
+              <Button component={Link} to={`/organizations/${organizationId}`} variant="outlined">
+                Отмена
+              </Button>
+            </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
+      <Snackbar open={Boolean(message)} autoHideDuration={4000} onClose={() => setMessage(null)} message={message || ''} />
+    </AppLayout>
+  );
+}
