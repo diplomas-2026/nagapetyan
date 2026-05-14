@@ -1,14 +1,27 @@
 package com.github.danbel.nagapetyanapi.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import java.time.Instant;
 
+@Entity
+@Table(name = "organizations")
 public class Organization {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false)
     private String name;
     private String inn;
     private String region;
     private String description;
+    @Column(name = "created_at")
     private Instant createdAt;
 
     public Long getId() {

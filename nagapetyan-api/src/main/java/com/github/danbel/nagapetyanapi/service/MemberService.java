@@ -8,6 +8,7 @@ import com.github.danbel.nagapetyanapi.model.OrganizationMember;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -34,6 +35,7 @@ public class MemberService {
         return store.getMembersByOrganization(organizationId);
     }
 
+    @Transactional
     public OrganizationMember createMember(ActorContext context, Long organizationId, MemberRequest request) {
         accessService.requireOrganizationWrite(context, organizationId);
         Organization organization = store.getOrganization(organizationId);
@@ -57,6 +59,7 @@ public class MemberService {
         return store.saveMember(member);
     }
 
+    @Transactional
     public OrganizationMember updateMember(ActorContext context, Long organizationId, Long memberId, MemberRequest request) {
         accessService.requireOrganizationWrite(context, organizationId);
         OrganizationMember member = accessService.requireMember(memberId);
@@ -75,6 +78,7 @@ public class MemberService {
         return store.saveMember(member);
     }
 
+    @Transactional
     public void deleteMember(ActorContext context, Long organizationId, Long memberId) {
         accessService.requireOrganizationWrite(context, organizationId);
         OrganizationMember member = accessService.requireMember(memberId);

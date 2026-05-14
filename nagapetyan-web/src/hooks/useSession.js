@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 const SESSION_KEY = 'nag-session';
+
+const SessionContext = createContext(null);
 
 function readSession() {
   try {
@@ -11,7 +13,7 @@ function readSession() {
   }
 }
 
-export function useSession() {
+export function SessionProvider({ children }) {
   const [session, setSession] = useState(() => readSession() || { token: '', user: null, selectedOrganizationId: '' });
 
   useEffect(() => {
@@ -22,33 +24,40 @@ export function useSession() {
     localStorage.removeItem(SESSION_KEY);
   }, [session]);
 
-  function setAuth(authResponse) {
-    setSession({
-      token: authResponse.token,
-      user: authResponse.user,
-      selectedOrganizationId: String(authResponse.user?.organizationId || ''),
-    });
-  }
+  const value = useMemo(
+    () => ({
+      token: session.token,
+      user: session.user,
+      role: session.user?.role || 'SYSTEM_ADMIN',
+      organizationId: session.selectedOrganizationId || session.user?.organizationId || '',
+      setAuth(authResponse) {
+        setSession({
+          token: authResponse.token,
+          user: authResponse.user,
+          selectedOrganizationId: String(authResponse.user?.organizationId || ''),
+        });
+      },
+      setOrganizationId(nextOrganizationId) {
+        setSession((current) => ({
+          ...current,
+          selectedOrganizationId: nextOrganizationId ? String(nextOrganizationId) : '',
+        }));
+      },
+      clearSession() {
+        setSession({ token: '', user: null, selectedOrganizationId: '' });
+        localStorage.removeItem(SESSION_KEY);
+      },
+    }),
+    [session],
+  );
 
-  function setOrganizationId(nextOrganizationId) {
-    setSession((current) => ({
-      ...current,
-      selectedOrganizationId: nextOrganizationId ? String(nextOrganizationId) : '',
-    }));
-  }
+  return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
+}
 
-  function clearSession() {
-    setSession({ token: '', user: null, selectedOrganizationId: '' });
-    localStorage.removeItem(SESSION_KEY);
+export function useSession() {
+  const context = useContext(SessionContext);
+  if (!context) {
+    throw new Error('useSession must be used within SessionProvider');
   }
-
-  return {
-    token: session.token,
-    user: session.user,
-    role: session.user?.role || 'SYSTEM_ADMIN',
-    organizationId: session.selectedOrganizationId || session.user?.organizationId || '',
-    setAuth,
-    setOrganizationId,
-    clearSession,
-  };
+  return context;
 }

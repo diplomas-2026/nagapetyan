@@ -11,6 +11,7 @@ import com.github.danbel.nagapetyanapi.model.OrganizationMember;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -52,6 +53,7 @@ public class OrganizationService {
         return organization;
     }
 
+    @Transactional
     public Organization createOrganization(ActorContext context, OrganizationCreateRequest request) {
         accessService.requireSystemAdmin(context);
         Organization organization = new Organization();
@@ -95,6 +97,7 @@ public class OrganizationService {
         return store.saveOrganization(organization);
     }
 
+    @Transactional
     public void deleteOrganization(ActorContext context, Long organizationId) {
         accessService.requireSystemAdmin(context);
         if (store.getOrganization(organizationId) == null) {

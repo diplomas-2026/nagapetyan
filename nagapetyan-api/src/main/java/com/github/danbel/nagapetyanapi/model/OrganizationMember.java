@@ -1,17 +1,37 @@
 package com.github.danbel.nagapetyanapi.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import java.time.Instant;
 
+@Entity
+@Table(name = "organization_members")
 public class OrganizationMember {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "organization_id", nullable = false)
     private Long organizationId;
+    @Column(nullable = false)
     private String login;
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
+    @Column(name = "full_name", nullable = false)
     private String fullName;
     private String email;
     private String position;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private ActorRole role;
+    @Column(name = "created_at")
     private Instant createdAt;
 
     public Long getId() {
