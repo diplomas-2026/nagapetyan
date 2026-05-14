@@ -2,10 +2,12 @@ package com.github.danbel.nagapetyanapi.service;
 
 import com.github.danbel.nagapetyanapi.dto.DashboardResponse;
 import com.github.danbel.nagapetyanapi.dto.AuthUserResponse;
+import com.github.danbel.nagapetyanapi.dto.LogisticsRecordMovementResponse;
 import com.github.danbel.nagapetyanapi.dto.LogisticsRecordResponse;
 import com.github.danbel.nagapetyanapi.dto.MemberResponse;
 import com.github.danbel.nagapetyanapi.dto.OrganizationResponse;
 import com.github.danbel.nagapetyanapi.model.LogisticsRecord;
+import com.github.danbel.nagapetyanapi.model.LogisticsRecordMovement;
 import com.github.danbel.nagapetyanapi.model.Organization;
 import com.github.danbel.nagapetyanapi.model.OrganizationMember;
 
@@ -72,6 +74,10 @@ public class MapperService {
     }
 
     public LogisticsRecordResponse toRecordResponse(LogisticsRecord record) {
+        return toRecordResponse(record, List.of());
+    }
+
+    public LogisticsRecordResponse toRecordResponse(LogisticsRecord record, List<LogisticsRecordMovement> movements) {
         long transitDays = record.getDeliveredAt() == null || record.getShippedAt() == null
                 ? 0
                 : ChronoUnit.DAYS.between(record.getShippedAt(), record.getDeliveredAt());
@@ -93,7 +99,23 @@ public class MapperService {
                 record.getNote(),
                 record.getCreatedAt(),
                 transitDays,
-                delayed
+                delayed,
+                movements.stream()
+                        .map(this::toMovementResponse)
+                        .toList()
+        );
+    }
+
+    public LogisticsRecordMovementResponse toMovementResponse(LogisticsRecordMovement movement) {
+        return new LogisticsRecordMovementResponse(
+                movement.getId(),
+                movement.getRecordId(),
+                movement.getMovementType(),
+                movement.getTitle(),
+                movement.getLocation(),
+                movement.getEventDate(),
+                movement.getDescription(),
+                movement.getSortOrder() == null ? 0 : movement.getSortOrder()
         );
     }
 

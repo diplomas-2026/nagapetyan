@@ -3,6 +3,7 @@ import { Button, Card, CardContent, Snackbar, Stack, Typography } from '@mui/mat
 import EditIcon from '@mui/icons-material/Edit';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
+import { MovementTimeline } from '../components/MovementTimeline';
 import { AppLayout } from '../components/AppLayout';
 import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
@@ -65,6 +66,11 @@ export function ReportDetailsPage() {
               <Typography>Подразделение: {report?.responsibleDepartment || '-'}</Typography>
               <Typography>Комментарий: {report?.note || '-'}</Typography>
             </Stack>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent>
+            <MovementTimeline items={report?.movements || []} />
           </CardContent>
         </Card>
       </Stack>

@@ -2,6 +2,7 @@ package com.github.danbel.nagapetyanapi.dto;
 
 import com.github.danbel.nagapetyanapi.model.ReportStatus;
 
+import java.util.List;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -19,6 +20,7 @@ public record LogisticsRecordResponse(
         String note,
         Instant createdAt,
         long transitDays,
-        boolean delayed
+        boolean delayed,
+        List<LogisticsRecordMovementResponse> movements
 ) {
 }

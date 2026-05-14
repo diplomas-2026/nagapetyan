@@ -5,12 +5,14 @@ import com.github.danbel.nagapetyanapi.model.AuthAccount;
 import com.github.danbel.nagapetyanapi.model.AuthSession;
 import com.github.danbel.nagapetyanapi.model.AuthSessionEntity;
 import com.github.danbel.nagapetyanapi.model.LogisticsRecord;
+import com.github.danbel.nagapetyanapi.model.LogisticsRecordMovement;
 import com.github.danbel.nagapetyanapi.model.Organization;
 import com.github.danbel.nagapetyanapi.model.OrganizationMember;
 import com.github.danbel.nagapetyanapi.model.ReportStatus;
 import com.github.danbel.nagapetyanapi.model.SystemAdmin;
 import com.github.danbel.nagapetyanapi.repository.AuthSessionRepository;
 import com.github.danbel.nagapetyanapi.repository.LogisticsRecordRepository;
+import com.github.danbel.nagapetyanapi.repository.LogisticsRecordMovementRepository;
 import com.github.danbel.nagapetyanapi.repository.OrganizationMemberRepository;
 import com.github.danbel.nagapetyanapi.repository.OrganizationRepository;
 import com.github.danbel.nagapetyanapi.repository.SystemAdminRepository;
@@ -27,6 +29,7 @@ public class InMemoryStore {
     private final OrganizationRepository organizationRepository;
     private final OrganizationMemberRepository memberRepository;
     private final LogisticsRecordRepository recordRepository;
+    private final LogisticsRecordMovementRepository movementRepository;
     private final SystemAdminRepository systemAdminRepository;
     private final AuthSessionRepository authSessionRepository;
 
@@ -34,11 +37,13 @@ public class InMemoryStore {
             OrganizationRepository organizationRepository,
             OrganizationMemberRepository memberRepository,
             LogisticsRecordRepository recordRepository,
+            LogisticsRecordMovementRepository movementRepository,
             SystemAdminRepository systemAdminRepository,
             AuthSessionRepository authSessionRepository) {
         this.organizationRepository = organizationRepository;
         this.memberRepository = memberRepository;
         this.recordRepository = recordRepository;
+        this.movementRepository = movementRepository;
         this.systemAdminRepository = systemAdminRepository;
         this.authSessionRepository = authSessionRepository;
     }
@@ -53,6 +58,10 @@ public class InMemoryStore {
 
     public LogisticsRecord saveRecord(LogisticsRecord record) {
         return recordRepository.save(record);
+    }
+
+    public LogisticsRecordMovement saveMovement(LogisticsRecordMovement movement) {
+        return movementRepository.save(movement);
     }
 
     public List<Organization> getOrganizations() {
@@ -158,6 +167,11 @@ public class InMemoryStore {
     }
 
     public void deleteRecord(Long id) {
+        movementRepository.deleteByRecordId(id);
         recordRepository.deleteById(id);
+    }
+
+    public List<LogisticsRecordMovement> getMovementsByRecordId(Long recordId) {
+        return movementRepository.findByRecordIdOrderBySortOrderAsc(recordId);
     }
 }
