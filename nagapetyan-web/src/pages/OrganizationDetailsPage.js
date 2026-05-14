@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useEffect } from 'react';
 import { Box, Button, Card, CardContent, Chip, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
@@ -13,10 +14,16 @@ import { useOrganizationDetails } from '../hooks/useOrganizationDetails';
 export function OrganizationDetailsPage() {
   const navigate = useNavigate();
   const { organizationId } = useParams();
-  const { role, setRole, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
-  const { organizations } = useOrganizations(role, sessionOrganizationId);
-  const { organization, dashboard, members, reports } = useOrganizationDetails(role, sessionOrganizationId, organizationId);
+  const { token, user, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
+  const { organizations } = useOrganizations(token);
+  const { organization, dashboard, members, reports } = useOrganizationDetails(token, organizationId);
   const [tab, setTab] = useState('overview');
+
+  useEffect(() => {
+    if (organizationId) {
+      setOrganizationId(organizationId);
+    }
+  }, [organizationId, setOrganizationId]);
 
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
@@ -39,10 +46,9 @@ export function OrganizationDetailsPage() {
     <AppLayout
       title="Логистика и отчетность"
       subtitle={organization ? organization.name : 'Details организации'}
-      role={role}
+      user={user}
       organizationId={sessionOrganizationId}
       organizations={organizations}
-      onRoleChange={setRole}
       onOrganizationChange={handleOrganizationChange}
       onLogout={() => {
         clearSession();
@@ -50,15 +56,24 @@ export function OrganizationDetailsPage() {
       }}
       actions={
         <Stack direction="row" spacing={1}>
-          <Button component={Link} to={`/organizations/${organizationId}/edit`} variant="outlined" startIcon={<EditIcon />}>
-            Редактировать
-          </Button>
-          <Button component={Link} to={`/organizations/${organizationId}/members/new`} variant="outlined" startIcon={<AddIcon />}>
-            Сотрудник
-          </Button>
-          <Button component={Link} to={`/organizations/${organizationId}/reports/new`} variant="contained" startIcon={<AddIcon />}>
-            Отчет
-          </Button>
+          {user?.role === 'SYSTEM_ADMIN' ? (
+            <Button component={Link} to={`/organizations/${organizationId}/edit`} variant="outlined" startIcon={<EditIcon />}>
+              Редактировать
+            </Button>
+          ) : null}
+          {user?.role !== 'EMPLOYEE' ? (
+            <>
+              <Button component={Link} to={`/organizations/${organizationId}/members/new?role=OWNER`} variant="outlined" startIcon={<AddIcon />}>
+                Владелец
+              </Button>
+              <Button component={Link} to={`/organizations/${organizationId}/members/new?role=EMPLOYEE`} variant="outlined" startIcon={<AddIcon />}>
+                Сотрудник
+              </Button>
+              <Button component={Link} to={`/organizations/${organizationId}/reports/new`} variant="contained" startIcon={<AddIcon />}>
+                Отчет
+              </Button>
+            </>
+          ) : null}
         </Stack>
       }
     >
@@ -96,6 +111,7 @@ export function OrganizationDetailsPage() {
               <Table size="small">
                 <TableHead>
                   <TableRow>
+                    <TableCell>Логин</TableCell>
                     <TableCell>ФИО</TableCell>
                     <TableCell>Email</TableCell>
                     <TableCell>Должность</TableCell>
@@ -108,8 +124,9 @@ export function OrganizationDetailsPage() {
                       key={item.id}
                       hover
                       sx={{ cursor: 'pointer' }}
-                      onClick={() => navigate(`/organizations/${organizationId}/members/${item.id}`)}
-                    >
+                    onClick={() => navigate(`/organizations/${organizationId}/members/${item.id}`)}
+                  >
+                      <TableCell>{item.login}</TableCell>
                       <TableCell>{item.fullName}</TableCell>
                       <TableCell>{item.email}</TableCell>
                       <TableCell>{item.position}</TableCell>

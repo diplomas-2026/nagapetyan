@@ -1,49 +1,39 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Container, FormControl, InputLabel, MenuItem, Paper, Select, Snackbar, Stack, Typography } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
+import { Alert, Box, Button, Container, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
-
-const ROLE_OPTIONS = [
-  { value: 'SYSTEM_ADMIN', label: 'Админ системы' },
-  { value: 'OWNER', label: 'Владелец организации' },
-  { value: 'EMPLOYEE', label: 'Сотрудник' },
-];
+import { useSession } from '../hooks/useSession';
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const [role, setRole] = useState(localStorage.getItem('nag-role') || 'SYSTEM_ADMIN');
-  const [organizationId, setOrganizationId] = useState(localStorage.getItem('nag-org-id') || '');
-  const [organizations, setOrganizations] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { setAuth } = useSession();
+  const [form, setForm] = useState({ login: '', password: '' });
   const [message, setMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadOrganizations();
+    const saved = localStorage.getItem('nag-last-login');
+    if (saved) {
+      setForm((current) => ({ ...current, login: saved }));
+    }
   }, []);
 
-  async function loadOrganizations() {
+  async function login() {
     try {
       setLoading(true);
-      const data = await api.getOrganizations('SYSTEM_ADMIN');
-      setOrganizations(Array.isArray(data) ? data : []);
-      if (!organizationId && data[0]) {
-        setOrganizationId(String(data[0].id));
+      const data = await api.login(form);
+      localStorage.setItem('nag-last-login', form.login);
+      setAuth(data);
+      if (data.user?.organizationId) {
+        navigate(`/organizations/${data.user.organizationId}`);
+      } else {
+        navigate('/organizations');
       }
     } catch (error) {
       setMessage(error.message);
     } finally {
       setLoading(false);
     }
-  }
-
-  function enterCabinet() {
-    localStorage.setItem('nag-role', role);
-    if (organizationId) {
-      localStorage.setItem('nag-org-id', organizationId);
-      navigate(`/organizations/${organizationId}`);
-      return;
-    }
-    navigate('/organizations');
   }
 
   return (
@@ -56,45 +46,31 @@ export function LoginPage() {
                 Вход в систему
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                Выберите роль и организацию для демонстрации кабинета.
+                Введите логин и пароль для входа.
               </Typography>
             </Box>
 
-            <FormControl fullWidth>
-              <InputLabel>Роль</InputLabel>
-              <Select value={role} label="Роль" onChange={(event) => setRole(event.target.value)}>
-                {ROLE_OPTIONS.map((item) => (
-                  <MenuItem key={item.value} value={item.value}>
-                    {item.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-
-            <FormControl fullWidth>
-              <InputLabel>Организация</InputLabel>
-              <Select value={organizationId} label="Организация" onChange={(event) => setOrganizationId(event.target.value)}>
-                {organizations.map((item) => (
-                  <MenuItem key={item.id} value={String(item.id)}>
-                    {item.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <TextField label="Логин" value={form.login} onChange={(event) => setForm({ ...form, login: event.target.value })} fullWidth />
+            <TextField label="Пароль" type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} fullWidth />
 
             <Stack direction="row" spacing={2} flexWrap="wrap">
-              <Button variant="contained" onClick={enterCabinet} disabled={loading}>
+              <Button variant="contained" onClick={login} disabled={loading}>
                 Войти
               </Button>
-              <Button component={Link} to="/register" variant="outlined">
-                Регистрация владельца
-              </Button>
             </Stack>
+
+            <Alert severity="info">
+              Демо-доступ: <b>admin / admin123</b>
+            </Alert>
           </Stack>
         </Paper>
       </Container>
 
-      <Snackbar open={Boolean(message)} autoHideDuration={4000} onClose={() => setMessage(null)} message={message || ''} />
+      <Snackbar open={Boolean(message)} autoHideDuration={4000} onClose={() => setMessage(null)}>
+        <Alert onClose={() => setMessage(null)} severity="error" sx={{ width: '100%' }}>
+          {message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

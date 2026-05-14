@@ -10,10 +10,16 @@ import { useOrganizations } from '../hooks/useOrganizations';
 export function ReportDetailsPage() {
   const navigate = useNavigate();
   const { organizationId, reportId } = useParams();
-  const { role, setRole, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
-  const { organizations } = useOrganizations(role, sessionOrganizationId);
+  const { token, user, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
+  const { organizations } = useOrganizations(token);
   const [report, setReport] = useState(null);
   const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+    if (organizationId) {
+      setOrganizationId(organizationId);
+    }
+  }, [organizationId, setOrganizationId]);
 
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
@@ -23,27 +29,26 @@ export function ReportDetailsPage() {
   }
 
   useEffect(() => {
-    api.getReport(role, organizationId, reportId).then(setReport).catch((error) => setMessage(error.message));
-  }, [organizationId, reportId, role]);
+    api.getReport(token, organizationId, reportId).then(setReport).catch((error) => setMessage(error.message));
+  }, [organizationId, reportId, token]);
 
   return (
     <AppLayout
       title="Логистика и отчетность"
       subtitle="Details отчета"
-      role={role}
+      user={user}
       organizationId={sessionOrganizationId}
       organizations={organizations}
-      onRoleChange={setRole}
       onOrganizationChange={handleOrganizationChange}
       onLogout={() => {
         clearSession();
         navigate('/login');
       }}
-      actions={
+      actions={user?.role !== 'EMPLOYEE' ? (
         <Button component={Link} to={`/organizations/${organizationId}/reports/${reportId}/edit`} variant="contained" startIcon={<EditIcon />}>
           Редактировать
         </Button>
-      }
+      ) : null}
     >
       <Stack spacing={3}>
         <Typography variant="h4">Отчет</Typography>

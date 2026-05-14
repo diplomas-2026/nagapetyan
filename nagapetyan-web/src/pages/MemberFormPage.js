@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, CardContent, FormControl, InputLabel, MenuItem, Select, Snackbar, Stack, TextField, Typography } from '@mui/material';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
 import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
 
 const emptyMember = {
+  login: '',
+  password: '',
   fullName: '',
   email: '',
   position: '',
@@ -15,12 +17,20 @@ const emptyMember = {
 
 export function MemberFormPage({ mode }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { organizationId, memberId } = useParams();
   const isEdit = mode === 'edit';
-  const { role, setRole, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
-  const { organizations } = useOrganizations(role, sessionOrganizationId);
-  const [form, setForm] = useState(emptyMember);
+  const initialRole = new URLSearchParams(location.search).get('role') || 'EMPLOYEE';
+  const { token, user, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
+  const { organizations } = useOrganizations(token);
+  const [form, setForm] = useState({ ...emptyMember, role: initialRole });
   const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+    if (organizationId) {
+      setOrganizationId(organizationId);
+    }
+  }, [organizationId, setOrganizationId]);
 
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
@@ -31,18 +41,29 @@ export function MemberFormPage({ mode }) {
 
   useEffect(() => {
     if (isEdit) {
-      api.getMember(role, organizationId, memberId).then(setForm).catch((error) => setMessage(error.message));
+      api.getMember(token, organizationId, memberId).then((data) => {
+        setForm({
+          login: data.login || '',
+          password: '',
+          fullName: data.fullName || '',
+          email: data.email || '',
+          position: data.position || '',
+          role: data.role || 'EMPLOYEE',
+        });
+      }).catch((error) => setMessage(error.message));
+    } else {
+      setForm((current) => ({ ...current, role: initialRole }));
     }
-  }, [isEdit, memberId, organizationId, role]);
+  }, [initialRole, isEdit, memberId, organizationId, token]);
 
   async function save() {
     try {
       if (isEdit) {
-        await api.updateMember(role, organizationId, memberId, form);
+        await api.updateMember(token, organizationId, memberId, form);
         navigate(`/organizations/${organizationId}/members/${memberId}`);
         return;
       }
-      const created = await api.createMember(role, organizationId, form);
+      const created = await api.createMember(token, organizationId, form);
       navigate(`/organizations/${organizationId}/members/${created.id}`);
     } catch (error) {
       setMessage(error.message);
@@ -53,10 +74,9 @@ export function MemberFormPage({ mode }) {
     <AppLayout
       title="Логистика и отчетность"
       subtitle={isEdit ? 'Редактирование сотрудника' : 'Новый сотрудник'}
-      role={role}
+      user={user}
       organizationId={sessionOrganizationId}
       organizations={organizations}
-      onRoleChange={setRole}
       onOrganizationChange={handleOrganizationChange}
       onLogout={() => {
         clearSession();
@@ -67,6 +87,15 @@ export function MemberFormPage({ mode }) {
         <CardContent>
           <Stack spacing={3}>
             <Typography variant="h4">{isEdit ? 'Редактирование сотрудника' : 'Новый сотрудник'}</Typography>
+            <TextField label="Логин" value={form.login} onChange={(event) => setForm({ ...form, login: event.target.value })} fullWidth />
+            <TextField
+              label={isEdit ? 'Новый пароль' : 'Пароль'}
+              type="password"
+              value={form.password}
+              onChange={(event) => setForm({ ...form, password: event.target.value })}
+              fullWidth
+              helperText={isEdit ? 'Оставьте пустым, если пароль менять не нужно' : ''}
+            />
             <TextField label="ФИО" value={form.fullName} onChange={(event) => setForm({ ...form, fullName: event.target.value })} fullWidth />
             <TextField label="Email" value={form.email} onChange={(event) => setForm({ ...form, email: event.target.value })} fullWidth />
             <TextField label="Должность" value={form.position} onChange={(event) => setForm({ ...form, position: event.target.value })} fullWidth />

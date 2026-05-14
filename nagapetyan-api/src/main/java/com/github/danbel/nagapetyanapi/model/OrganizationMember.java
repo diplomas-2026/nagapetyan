@@ -6,6 +6,8 @@ public class OrganizationMember {
 
     private Long id;
     private Long organizationId;
+    private String login;
+    private String passwordHash;
     private String fullName;
     private String email;
     private String position;
@@ -26,6 +28,22 @@ public class OrganizationMember {
 
     public void setOrganizationId(Long organizationId) {
         this.organizationId = organizationId;
+    }
+
+    public String getLogin() {
+        return login;
+    }
+
+    public void setLogin(String login) {
+        this.login = login;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public String getFullName() {

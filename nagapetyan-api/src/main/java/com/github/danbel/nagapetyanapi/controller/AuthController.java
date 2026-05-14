@@ -1,8 +1,8 @@
 package com.github.danbel.nagapetyanapi.controller;
 
-import com.github.danbel.nagapetyanapi.dto.OwnerRegistrationRequest;
-import com.github.danbel.nagapetyanapi.dto.RegistrationResponse;
-import com.github.danbel.nagapetyanapi.service.RegistrationService;
+import com.github.danbel.nagapetyanapi.dto.AuthResponse;
+import com.github.danbel.nagapetyanapi.dto.LoginRequest;
+import com.github.danbel.nagapetyanapi.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,14 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final RegistrationService registrationService;
+    private final AuthService authService;
 
-    public AuthController(RegistrationService registrationService) {
-        this.registrationService = registrationService;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
-    @PostMapping("/register")
-    public RegistrationResponse registerOwner(@Valid @RequestBody OwnerRegistrationRequest request) {
-        return registrationService.registerOwner(request);
+    @PostMapping("/login")
+    public AuthResponse login(@Valid @RequestBody LoginRequest request) {
+        return authService.login(request);
     }
 }

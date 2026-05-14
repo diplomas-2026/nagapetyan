@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
@@ -18,11 +19,13 @@ public class MemberService {
 
     private final InMemoryStore store;
     private final AccessService accessService;
+    private final AuthService authService;
     private final MapperService mapperService;
 
-    public MemberService(InMemoryStore store, AccessService accessService, MapperService mapperService) {
+    public MemberService(InMemoryStore store, AccessService accessService, AuthService authService, MapperService mapperService) {
         this.store = store;
         this.accessService = accessService;
+        this.authService = authService;
         this.mapperService = mapperService;
     }
 
@@ -37,8 +40,16 @@ public class MemberService {
         if (organization == null) {
             throw new ResponseStatusException(NOT_FOUND, "Организация не найдена");
         }
+        if (request.password() == null || request.password().isBlank()) {
+            throw new ResponseStatusException(BAD_REQUEST, "Пароль обязателен");
+        }
+        if (store.findAccountByLogin(request.login()) != null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Логин уже занят");
+        }
         OrganizationMember member = new OrganizationMember();
         member.setOrganizationId(organizationId);
+        member.setLogin(request.login());
+        member.setPasswordHash(authService.hashPassword(request.password()));
         member.setFullName(request.fullName());
         member.setEmail(request.email());
         member.setPosition(request.position());
@@ -52,6 +63,11 @@ public class MemberService {
         if (!organizationId.equals(member.getOrganizationId())) {
             throw new ResponseStatusException(NOT_FOUND, "Сотрудник не найден в организации");
         }
+        if (!request.login().equals(member.getLogin()) && store.findAccountByLogin(request.login()) != null) {
+            throw new ResponseStatusException(BAD_REQUEST, "Логин уже занят");
+        }
+        member.setLogin(request.login());
+        authService.ensurePasswordMatches(member, request.password());
         member.setFullName(request.fullName());
         member.setEmail(request.email());
         member.setPosition(request.position());
@@ -65,6 +81,7 @@ public class MemberService {
         if (!organizationId.equals(member.getOrganizationId())) {
             throw new ResponseStatusException(NOT_FOUND, "Сотрудник не найден в организации");
         }
+        store.deleteSessionsByLoginAndOrganizationId(member.getLogin(), member.getOrganizationId());
         store.deleteMember(memberId);
     }
 

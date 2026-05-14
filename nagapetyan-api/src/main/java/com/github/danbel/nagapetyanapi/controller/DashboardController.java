@@ -2,7 +2,7 @@ package com.github.danbel.nagapetyanapi.controller;
 
 import com.github.danbel.nagapetyanapi.dto.DashboardResponse;
 import com.github.danbel.nagapetyanapi.model.ActorContext;
-import com.github.danbel.nagapetyanapi.model.ActorRole;
+import com.github.danbel.nagapetyanapi.service.AuthService;
 import com.github.danbel.nagapetyanapi.service.MapperService;
 import com.github.danbel.nagapetyanapi.service.OrganizationService;
 import com.github.danbel.nagapetyanapi.service.RecordService;
@@ -19,18 +19,19 @@ public class DashboardController {
     private final OrganizationService organizationService;
     private final RecordService recordService;
     private final MapperService mapperService;
+    private final AuthService authService;
 
-    public DashboardController(OrganizationService organizationService, RecordService recordService, MapperService mapperService) {
+    public DashboardController(OrganizationService organizationService, RecordService recordService, MapperService mapperService, AuthService authService) {
         this.organizationService = organizationService;
         this.recordService = recordService;
         this.mapperService = mapperService;
+        this.authService = authService;
     }
 
     @GetMapping
-    public DashboardResponse getDashboard(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
-                                          @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,
-                                          @PathVariable Long organizationId) {
-        ActorContext context = new ActorContext(role, organizationHeaderId);
+    public DashboardResponse getDashboard(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                         @PathVariable Long organizationId) {
+        ActorContext context = authService.requireContext(authorization);
         var organizationResponse = organizationService.getOrganizationResponse(context, organizationId);
         var records = recordService.listRecordResponses(context, organizationId);
         return mapperService.toDashboardResponse(organizationResponse, records);

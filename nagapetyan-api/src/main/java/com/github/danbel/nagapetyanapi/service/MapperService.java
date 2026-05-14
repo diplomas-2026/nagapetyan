@@ -1,6 +1,7 @@
 package com.github.danbel.nagapetyanapi.service;
 
 import com.github.danbel.nagapetyanapi.dto.DashboardResponse;
+import com.github.danbel.nagapetyanapi.dto.AuthUserResponse;
 import com.github.danbel.nagapetyanapi.dto.LogisticsRecordResponse;
 import com.github.danbel.nagapetyanapi.dto.MemberResponse;
 import com.github.danbel.nagapetyanapi.dto.OrganizationResponse;
@@ -35,11 +36,38 @@ public class MapperService {
         return new MemberResponse(
                 member.getId(),
                 member.getOrganizationId(),
+                member.getLogin(),
                 member.getFullName(),
                 member.getEmail(),
                 member.getPosition(),
                 member.getRole(),
                 member.getCreatedAt()
+        );
+    }
+
+    public AuthUserResponse toAuthUserResponse(OrganizationMember member) {
+        return new AuthUserResponse(
+                member.getId(),
+                member.getLogin(),
+                member.getFullName(),
+                member.getEmail(),
+                member.getPosition(),
+                member.getRole(),
+                member.getOrganizationId(),
+                member.getCreatedAt()
+        );
+    }
+
+    public AuthUserResponse toAuthUserResponse(com.github.danbel.nagapetyanapi.model.AuthAccount account) {
+        return new AuthUserResponse(
+                null,
+                account.login(),
+                account.fullName(),
+                null,
+                null,
+                account.role(),
+                account.organizationId(),
+                null
         );
     }
 

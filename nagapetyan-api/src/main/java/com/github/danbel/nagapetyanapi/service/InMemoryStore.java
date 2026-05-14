@@ -1,6 +1,8 @@
 package com.github.danbel.nagapetyanapi.service;
 
 import com.github.danbel.nagapetyanapi.model.ActorRole;
+import com.github.danbel.nagapetyanapi.model.AuthAccount;
+import com.github.danbel.nagapetyanapi.model.AuthSession;
 import com.github.danbel.nagapetyanapi.model.LogisticsRecord;
 import com.github.danbel.nagapetyanapi.model.Organization;
 import com.github.danbel.nagapetyanapi.model.OrganizationMember;
@@ -81,9 +83,22 @@ public class InMemoryStore {
         jdbcTemplate.update("delete from organizations where id = ?", id);
     }
 
+    public void deleteSessionsByOrganizationId(Long organizationId) {
+        jdbcTemplate.update("delete from auth_sessions where organization_id = ?", organizationId);
+    }
+
+    public void deleteSessionsByLoginAndOrganizationId(String login, Long organizationId) {
+        jdbcTemplate.update("""
+                        delete from auth_sessions
+                        where login = ? and organization_id = ?
+                        """,
+                login,
+                organizationId);
+    }
+
     public List<OrganizationMember> getMembersByOrganization(Long organizationId) {
         return jdbcTemplate.query("""
-                        select id, organization_id, full_name, email, position, role, created_at
+                        select id, organization_id, login, password_hash, full_name, email, position, role, created_at
                         from organization_members
                         where organization_id = ?
                         order by id
@@ -94,13 +109,77 @@ public class InMemoryStore {
 
     public OrganizationMember getMember(Long id) {
         List<OrganizationMember> members = jdbcTemplate.query("""
-                        select id, organization_id, full_name, email, position, role, created_at
+                        select id, organization_id, login, password_hash, full_name, email, position, role, created_at
                         from organization_members
                         where id = ?
                         """,
                 (rs, rowNum) -> mapMember(rs),
                 id);
         return members.stream().findFirst().orElse(null);
+    }
+
+    public AuthAccount findAccountByLogin(String login) {
+        List<AuthAccount> adminAccounts = jdbcTemplate.query("""
+                        select login, password_hash, full_name
+                        from system_admins
+                        where login = ?
+                        """,
+                (rs, rowNum) -> new AuthAccount(
+                        ActorRole.SYSTEM_ADMIN,
+                        null,
+                        rs.getString("login"),
+                        rs.getString("full_name"),
+                        rs.getString("password_hash")),
+                login);
+        if (!adminAccounts.isEmpty()) {
+            return adminAccounts.get(0);
+        }
+
+        List<AuthAccount> memberAccounts = jdbcTemplate.query("""
+                        select id, organization_id, login, password_hash, full_name, role
+                        from organization_members
+                        where login = ?
+                        """,
+                (rs, rowNum) -> new AuthAccount(
+                        ActorRole.valueOf(rs.getString("role")),
+                        rs.getLong("organization_id"),
+                        rs.getString("login"),
+                        rs.getString("full_name"),
+                        rs.getString("password_hash")),
+                login);
+        return memberAccounts.stream().findFirst().orElse(null);
+    }
+
+    public AuthSession getSession(String token) {
+        List<AuthSession> sessions = jdbcTemplate.query("""
+                        select token, role, organization_id, login, full_name
+                        from auth_sessions
+                        where token = ?
+                        """,
+                (rs, rowNum) -> new AuthSession(
+                        rs.getString("token"),
+                        ActorRole.valueOf(rs.getString("role")),
+                        rs.getObject("organization_id") == null ? null : rs.getLong("organization_id"),
+                        rs.getString("login"),
+                        rs.getString("full_name")),
+                token);
+        return sessions.stream().findFirst().orElse(null);
+    }
+
+    public void saveSession(AuthSession session) {
+        jdbcTemplate.update("""
+                        insert into auth_sessions (token, role, organization_id, login, full_name)
+                        values (?, ?, ?, ?, ?)
+                        """,
+                session.token(),
+                session.role().name(),
+                session.organizationId(),
+                session.login(),
+                session.fullName());
+    }
+
+    public void deleteSession(String token) {
+        jdbcTemplate.update("delete from auth_sessions where token = ?", token);
     }
 
     public void deleteMember(Long id) {
@@ -168,14 +247,16 @@ public class InMemoryStore {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement("""
-                    insert into organization_members (organization_id, full_name, email, position, role)
-                    values (?, ?, ?, ?, ?)
+                    insert into organization_members (organization_id, login, password_hash, full_name, email, position, role)
+                    values (?, ?, ?, ?, ?, ?, ?)
                     """, Statement.RETURN_GENERATED_KEYS);
             ps.setLong(1, member.getOrganizationId());
-            ps.setString(2, member.getFullName());
-            ps.setString(3, member.getEmail());
-            ps.setString(4, member.getPosition());
-            ps.setString(5, member.getRole().name());
+            ps.setString(2, member.getLogin());
+            ps.setString(3, member.getPasswordHash());
+            ps.setString(4, member.getFullName());
+            ps.setString(5, member.getEmail());
+            ps.setString(6, member.getPosition());
+            ps.setString(7, member.getRole().name());
             return ps;
         }, keyHolder);
         return keyHolder.getKey().longValue();
@@ -184,10 +265,12 @@ public class InMemoryStore {
     private void updateMember(OrganizationMember member) {
         jdbcTemplate.update("""
                         update organization_members
-                        set organization_id = ?, full_name = ?, email = ?, position = ?, role = ?
+                        set organization_id = ?, login = ?, password_hash = ?, full_name = ?, email = ?, position = ?, role = ?
                         where id = ?
                         """,
                 member.getOrganizationId(),
+                member.getLogin(),
+                member.getPasswordHash(),
                 member.getFullName(),
                 member.getEmail(),
                 member.getPosition(),
@@ -266,6 +349,8 @@ public class InMemoryStore {
         OrganizationMember member = new OrganizationMember();
         member.setId(rs.getLong("id"));
         member.setOrganizationId(rs.getLong("organization_id"));
+        member.setLogin(rs.getString("login"));
+        member.setPasswordHash(rs.getString("password_hash"));
         member.setFullName(rs.getString("full_name"));
         member.setEmail(rs.getString("email"));
         member.setPosition(rs.getString("position"));

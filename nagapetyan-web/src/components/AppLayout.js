@@ -1,13 +1,12 @@
-import { AppBar, Box, Button, FormControl, InputLabel, MenuItem, Paper, Select, Stack, Toolbar, Typography } from '@mui/material';
+import { AppBar, Box, Button, Chip, FormControl, InputLabel, MenuItem, Paper, Select, Stack, Toolbar, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 
 export function AppLayout({
   title,
   subtitle,
-  role,
+  user,
   organizationId,
   organizations,
-  onRoleChange,
   onOrganizationChange,
   onLogout,
   actions,
@@ -26,33 +25,25 @@ export function AppLayout({
             ) : null}
           </Stack>
 
+          {user ? (
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              <Chip label={user.fullName || user.login} variant="outlined" />
+              <Chip label={user.role} color="primary" variant="outlined" />
+            </Stack>
+          ) : null}
+
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Button component={Link} to="/organizations" variant="outlined">
               Организации
-            </Button>
-            <Button component={Link} to="/login" variant="text">
-              Вход
-            </Button>
-            <Button component={Link} to="/register" variant="text">
-              Регистрация
             </Button>
             <Button variant="text" onClick={onLogout}>
               Выйти
             </Button>
           </Stack>
 
-          <FormControl size="small" sx={{ minWidth: 220 }}>
-            <InputLabel>Роль</InputLabel>
-            <Select value={role} label="Роль" onChange={(event) => onRoleChange(event.target.value)}>
-              <MenuItem value="SYSTEM_ADMIN">Админ системы</MenuItem>
-              <MenuItem value="OWNER">Владелец организации</MenuItem>
-              <MenuItem value="EMPLOYEE">Сотрудник</MenuItem>
-            </Select>
-          </FormControl>
-
-          <FormControl size="small" sx={{ minWidth: 260 }}>
+          <FormControl size="small" sx={{ minWidth: 260 }} disabled={!organizations.length}>
             <InputLabel>Организация</InputLabel>
-            <Select value={organizationId} label="Организация" onChange={(event) => onOrganizationChange(event.target.value)}>
+            <Select value={organizationId || ''} label="Организация" onChange={(event) => onOrganizationChange(event.target.value)}>
               {organizations.map((item) => (
                 <MenuItem key={item.id} value={String(item.id)}>
                   {item.name}

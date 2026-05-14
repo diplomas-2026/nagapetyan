@@ -10,10 +10,16 @@ import { useOrganizations } from '../hooks/useOrganizations';
 export function MemberDetailsPage() {
   const navigate = useNavigate();
   const { organizationId, memberId } = useParams();
-  const { role, setRole, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
-  const { organizations } = useOrganizations(role, sessionOrganizationId);
+  const { token, user, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
+  const { organizations } = useOrganizations(token);
   const [member, setMember] = useState(null);
   const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+    if (organizationId) {
+      setOrganizationId(organizationId);
+    }
+  }, [organizationId, setOrganizationId]);
 
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
@@ -23,33 +29,33 @@ export function MemberDetailsPage() {
   }
 
   useEffect(() => {
-    api.getMember(role, organizationId, memberId).then(setMember).catch((error) => setMessage(error.message));
-  }, [memberId, organizationId, role]);
+    api.getMember(token, organizationId, memberId).then(setMember).catch((error) => setMessage(error.message));
+  }, [memberId, organizationId, token]);
 
   return (
     <AppLayout
       title="Логистика и отчетность"
       subtitle="Details сотрудника"
-      role={role}
+      user={user}
       organizationId={sessionOrganizationId}
       organizations={organizations}
-      onRoleChange={setRole}
       onOrganizationChange={handleOrganizationChange}
       onLogout={() => {
         clearSession();
         navigate('/login');
       }}
-      actions={
+      actions={user?.role !== 'EMPLOYEE' ? (
         <Button component={Link} to={`/organizations/${organizationId}/members/${memberId}/edit`} variant="contained" startIcon={<EditIcon />}>
           Редактировать
         </Button>
-      }
+      ) : null}
     >
       <Stack spacing={3}>
         <Typography variant="h4">Сотрудник</Typography>
         <Card>
           <CardContent>
             <Stack spacing={1}>
+              <Typography>Логин: {member?.login || '-'}</Typography>
               <Typography>ФИО: {member?.fullName || '-'}</Typography>
               <Typography>Email: {member?.email || '-'}</Typography>
               <Typography>Должность: {member?.position || '-'}</Typography>

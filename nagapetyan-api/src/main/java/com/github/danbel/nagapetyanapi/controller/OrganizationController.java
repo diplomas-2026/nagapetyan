@@ -1,9 +1,10 @@
 package com.github.danbel.nagapetyanapi.controller;
 
+import com.github.danbel.nagapetyanapi.dto.OrganizationCreateRequest;
 import com.github.danbel.nagapetyanapi.dto.OrganizationRequest;
 import com.github.danbel.nagapetyanapi.dto.OrganizationResponse;
 import com.github.danbel.nagapetyanapi.model.ActorContext;
-import com.github.danbel.nagapetyanapi.model.ActorRole;
+import com.github.danbel.nagapetyanapi.service.AuthService;
 import com.github.danbel.nagapetyanapi.service.OrganizationService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,43 +24,41 @@ import java.util.List;
 public class OrganizationController {
 
     private final OrganizationService organizationService;
+    private final AuthService authService;
 
-    public OrganizationController(OrganizationService organizationService) {
+    public OrganizationController(OrganizationService organizationService, AuthService authService) {
         this.organizationService = organizationService;
+        this.authService = authService;
     }
 
     @GetMapping
-    public List<OrganizationResponse> list(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
-                                           @RequestHeader(value = "X-Organization-Id", required = false) Long organizationId) {
-        return organizationService.listOrganizationResponses(new ActorContext(role, organizationId));
+    public List<OrganizationResponse> list(@RequestHeader(value = "Authorization", required = false) String authorization) {
+        return organizationService.listOrganizationResponses(authService.requireContext(authorization));
     }
 
     @GetMapping("/{organizationId}")
-    public OrganizationResponse get(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
-                                    @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,
+    public OrganizationResponse get(@RequestHeader(value = "Authorization", required = false) String authorization,
                                     @PathVariable Long organizationId) {
-        return organizationService.getOrganizationResponse(new ActorContext(role, organizationHeaderId), organizationId);
+        ActorContext context = authService.requireContext(authorization);
+        return organizationService.getOrganizationResponse(context, organizationId);
     }
 
     @PostMapping
-    public OrganizationResponse create(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
-                                       @RequestHeader(value = "X-Organization-Id", required = false) Long organizationId,
-                                       @Valid @RequestBody OrganizationRequest request) {
-        return organizationService.createOrganizationResponse(new ActorContext(role, organizationId), request);
+    public OrganizationResponse create(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                       @Valid @RequestBody OrganizationCreateRequest request) {
+        return organizationService.createOrganizationResponse(authService.requireContext(authorization), request);
     }
 
     @PutMapping("/{organizationId}")
-    public OrganizationResponse update(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
-                                       @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,
+    public OrganizationResponse update(@RequestHeader(value = "Authorization", required = false) String authorization,
                                        @PathVariable Long organizationId,
                                        @Valid @RequestBody OrganizationRequest request) {
-        return organizationService.updateOrganizationResponse(new ActorContext(role, organizationHeaderId), organizationId, request);
+        return organizationService.updateOrganizationResponse(authService.requireContext(authorization), organizationId, request);
     }
 
     @DeleteMapping("/{organizationId}")
-    public void delete(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
-                       @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,
+    public void delete(@RequestHeader(value = "Authorization", required = false) String authorization,
                        @PathVariable Long organizationId) {
-        organizationService.deleteOrganization(new ActorContext(role, organizationHeaderId), organizationId);
+        organizationService.deleteOrganization(authService.requireContext(authorization), organizationId);
     }
 }

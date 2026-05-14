@@ -1,16 +1,23 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, CardContent, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { Button, Card, CardContent, Divider, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
 import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
 
-const emptyOrganization = {
+const emptyForm = {
   name: '',
   inn: '',
   region: '',
   description: '',
+  owner: {
+    login: '',
+    password: '',
+    fullName: '',
+    email: '',
+    position: '',
+  },
 };
 
 export function OrganizationFormPage({ mode }) {
@@ -18,10 +25,16 @@ export function OrganizationFormPage({ mode }) {
   const params = useParams();
   const targetId = params.organizationId;
   const isEdit = mode === 'edit';
-  const { role, setRole, organizationId, setOrganizationId, clearSession } = useSession();
-  const { organizations } = useOrganizations(role, organizationId);
-  const [form, setForm] = useState(emptyOrganization);
+  const { token, user, organizationId, setOrganizationId, clearSession } = useSession();
+  const { organizations } = useOrganizations(token);
+  const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+    if (targetId) {
+      setOrganizationId(targetId);
+    }
+  }, [setOrganizationId, targetId]);
 
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
@@ -32,17 +45,30 @@ export function OrganizationFormPage({ mode }) {
 
   useEffect(() => {
     if (isEdit && targetId) {
-      api.getOrganization(role, organizationId, targetId).then(setForm).catch((error) => setMessage(error.message));
+      api.getOrganization(token, targetId).then((data) => {
+        setForm((current) => ({
+          ...current,
+          name: data.name || '',
+          inn: data.inn || '',
+          region: data.region || '',
+          description: data.description || '',
+        }));
+      }).catch((error) => setMessage(error.message));
     }
-  }, [isEdit, organizationId, role, targetId]);
+  }, [isEdit, targetId, token]);
 
   async function save() {
     try {
       if (isEdit) {
-        const updated = await api.updateOrganization(role, targetId, form);
+        const updated = await api.updateOrganization(token, targetId, {
+          name: form.name,
+          inn: form.inn,
+          region: form.region,
+          description: form.description,
+        });
         navigate(`/organizations/${updated.id}`);
       } else {
-        const created = await api.createOrganization(role, organizationId || undefined, form);
+        const created = await api.createOrganization(token, form);
         navigate(`/organizations/${created.id}`);
       }
     } catch (error) {
@@ -54,10 +80,9 @@ export function OrganizationFormPage({ mode }) {
     <AppLayout
       title="Логистика и отчетность"
       subtitle={isEdit ? 'Редактирование организации' : 'Создание организации'}
-      role={role}
+      user={user}
       organizationId={organizationId}
       organizations={organizations}
-      onRoleChange={setRole}
       onOrganizationChange={handleOrganizationChange}
       onLogout={() => {
         clearSession();
@@ -72,6 +97,19 @@ export function OrganizationFormPage({ mode }) {
             <TextField label="ИНН" value={form.inn} onChange={(event) => setForm({ ...form, inn: event.target.value })} fullWidth />
             <TextField label="Регион" value={form.region} onChange={(event) => setForm({ ...form, region: event.target.value })} fullWidth />
             <TextField label="Описание" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} fullWidth multiline minRows={4} />
+
+            {!isEdit ? (
+              <>
+                <Divider />
+                <Typography variant="h6">Первый владелец</Typography>
+                <TextField label="Логин" value={form.owner.login} onChange={(event) => setForm({ ...form, owner: { ...form.owner, login: event.target.value } })} fullWidth />
+                <TextField label="Пароль" type="password" value={form.owner.password} onChange={(event) => setForm({ ...form, owner: { ...form.owner, password: event.target.value } })} fullWidth />
+                <TextField label="ФИО" value={form.owner.fullName} onChange={(event) => setForm({ ...form, owner: { ...form.owner, fullName: event.target.value } })} fullWidth />
+                <TextField label="Email" value={form.owner.email} onChange={(event) => setForm({ ...form, owner: { ...form.owner, email: event.target.value } })} fullWidth />
+                <TextField label="Должность" value={form.owner.position} onChange={(event) => setForm({ ...form, owner: { ...form.owner, position: event.target.value } })} fullWidth />
+              </>
+            ) : null}
+
             <Stack direction="row" spacing={2} flexWrap="wrap">
               <Button variant="contained" onClick={save}>
                 Сохранить

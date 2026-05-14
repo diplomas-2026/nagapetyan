@@ -5,10 +5,9 @@ const defaultApiBase =
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || defaultApiBase;
 
-async function request(path, { method = 'GET', body, role, organizationId, isFormData = false } = {}) {
+async function request(path, { method = 'GET', body, token, isFormData = false } = {}) {
   const headers = {
-    ...(role ? { 'X-Role': role } : {}),
-    ...(organizationId ? { 'X-Organization-Id': String(organizationId) } : {}),
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
   const init = {
@@ -38,31 +37,29 @@ async function request(path, { method = 'GET', body, role, organizationId, isFor
 }
 
 export const api = {
-  registerOwner: (body) => request('/auth/register', { method: 'POST', body }),
-  getOrganizations: (role, organizationId) => request('/organizations', { role, organizationId }),
-  getOrganization: (role, organizationId, targetOrganizationId) =>
-    request(`/organizations/${targetOrganizationId}`, { role, organizationId }),
-  createOrganization: (role, organizationId, body) => request('/organizations', { method: 'POST', role, organizationId, body }),
-  updateOrganization: (role, organizationId, body) => request(`/organizations/${organizationId}`, { method: 'PUT', role, organizationId, body }),
-  deleteOrganization: (role, organizationId) => request(`/organizations/${organizationId}`, { method: 'DELETE', role, organizationId }),
-  getDashboard: (role, organizationId) => request(`/organizations/${organizationId}/dashboard`, { role, organizationId }),
-  getMembers: (role, organizationId) => request(`/organizations/${organizationId}/members`, { role, organizationId }),
-  getMember: (role, organizationId, memberId) => request(`/organizations/${organizationId}/members/${memberId}`, { role, organizationId }),
-  createMember: (role, organizationId, body) => request(`/organizations/${organizationId}/members`, { method: 'POST', role, organizationId, body }),
-  updateMember: (role, organizationId, memberId, body) => request(`/organizations/${organizationId}/members/${memberId}`, { method: 'PUT', role, organizationId, body }),
-  deleteMember: (role, organizationId, memberId) => request(`/organizations/${organizationId}/members/${memberId}`, { method: 'DELETE', role, organizationId }),
-  getReports: (role, organizationId) => request(`/organizations/${organizationId}/reports`, { role, organizationId }),
-  getReport: (role, organizationId, reportId) => request(`/organizations/${organizationId}/reports/${reportId}`, { role, organizationId }),
-  createReport: (role, organizationId, body) => request(`/organizations/${organizationId}/reports`, { method: 'POST', role, organizationId, body }),
-  updateReport: (role, organizationId, reportId, body) => request(`/organizations/${organizationId}/reports/${reportId}`, { method: 'PUT', role, organizationId, body }),
-  deleteReport: (role, organizationId, reportId) => request(`/organizations/${organizationId}/reports/${reportId}`, { method: 'DELETE', role, organizationId }),
-  importReports: (role, organizationId, file) => {
+  login: (body) => request('/auth/login', { method: 'POST', body }),
+  getOrganizations: (token) => request('/organizations', { token }),
+  getOrganization: (token, targetOrganizationId) => request(`/organizations/${targetOrganizationId}`, { token }),
+  createOrganization: (token, body) => request('/organizations', { method: 'POST', token, body }),
+  updateOrganization: (token, organizationId, body) => request(`/organizations/${organizationId}`, { method: 'PUT', token, body }),
+  deleteOrganization: (token, organizationId) => request(`/organizations/${organizationId}`, { method: 'DELETE', token }),
+  getDashboard: (token, organizationId) => request(`/organizations/${organizationId}/dashboard`, { token }),
+  getMembers: (token, organizationId) => request(`/organizations/${organizationId}/members`, { token }),
+  getMember: (token, organizationId, memberId) => request(`/organizations/${organizationId}/members/${memberId}`, { token }),
+  createMember: (token, organizationId, body) => request(`/organizations/${organizationId}/members`, { method: 'POST', token, body }),
+  updateMember: (token, organizationId, memberId, body) => request(`/organizations/${organizationId}/members/${memberId}`, { method: 'PUT', token, body }),
+  deleteMember: (token, organizationId, memberId) => request(`/organizations/${organizationId}/members/${memberId}`, { method: 'DELETE', token }),
+  getReports: (token, organizationId) => request(`/organizations/${organizationId}/reports`, { token }),
+  getReport: (token, organizationId, reportId) => request(`/organizations/${organizationId}/reports/${reportId}`, { token }),
+  createReport: (token, organizationId, body) => request(`/organizations/${organizationId}/reports`, { method: 'POST', token, body }),
+  updateReport: (token, organizationId, reportId, body) => request(`/organizations/${organizationId}/reports/${reportId}`, { method: 'PUT', token, body }),
+  deleteReport: (token, organizationId, reportId) => request(`/organizations/${organizationId}/reports/${reportId}`, { method: 'DELETE', token }),
+  importReports: (token, organizationId, file) => {
     const formData = new FormData();
     formData.append('file', file);
     return request(`/organizations/${organizationId}/reports/import`, {
       method: 'POST',
-      role,
-      organizationId,
+      token,
       body: formData,
       isFormData: true,
     });

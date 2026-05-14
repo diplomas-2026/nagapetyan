@@ -1,32 +1,53 @@
 import { useEffect, useState } from 'react';
 
+const SESSION_KEY = 'nag-session';
+
+function readSession() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function useSession() {
-  const [role, setRole] = useState(localStorage.getItem('nag-role') || 'SYSTEM_ADMIN');
-  const [organizationId, setOrganizationId] = useState(localStorage.getItem('nag-org-id') || '');
+  const [session, setSession] = useState(() => readSession() || { token: '', user: null, selectedOrganizationId: '' });
 
   useEffect(() => {
-    localStorage.setItem('nag-role', role);
-  }, [role]);
-
-  useEffect(() => {
-    if (organizationId) {
-      localStorage.setItem('nag-org-id', organizationId);
-    } else {
-      localStorage.removeItem('nag-org-id');
+    if (session.token && session.user) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      return;
     }
-  }, [organizationId]);
+    localStorage.removeItem(SESSION_KEY);
+  }, [session]);
+
+  function setAuth(authResponse) {
+    setSession({
+      token: authResponse.token,
+      user: authResponse.user,
+      selectedOrganizationId: String(authResponse.user?.organizationId || ''),
+    });
+  }
+
+  function setOrganizationId(nextOrganizationId) {
+    setSession((current) => ({
+      ...current,
+      selectedOrganizationId: nextOrganizationId ? String(nextOrganizationId) : '',
+    }));
+  }
 
   function clearSession() {
-    localStorage.removeItem('nag-role');
-    localStorage.removeItem('nag-org-id');
-    setRole('SYSTEM_ADMIN');
-    setOrganizationId('');
+    setSession({ token: '', user: null, selectedOrganizationId: '' });
+    localStorage.removeItem(SESSION_KEY);
   }
 
   return {
-    role,
-    setRole,
-    organizationId,
+    token: session.token,
+    user: session.user,
+    role: session.user?.role || 'SYSTEM_ADMIN',
+    organizationId: session.selectedOrganizationId || session.user?.organizationId || '',
+    setAuth,
     setOrganizationId,
     clearSession,
   };

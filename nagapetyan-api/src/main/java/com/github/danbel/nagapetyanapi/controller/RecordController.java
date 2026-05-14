@@ -3,8 +3,7 @@ package com.github.danbel.nagapetyanapi.controller;
 import com.github.danbel.nagapetyanapi.dto.ImportResultResponse;
 import com.github.danbel.nagapetyanapi.dto.LogisticsRecordRequest;
 import com.github.danbel.nagapetyanapi.dto.LogisticsRecordResponse;
-import com.github.danbel.nagapetyanapi.model.ActorContext;
-import com.github.danbel.nagapetyanapi.model.ActorRole;
+import com.github.danbel.nagapetyanapi.service.AuthService;
 import com.github.danbel.nagapetyanapi.service.RecordImportService;
 import com.github.danbel.nagapetyanapi.service.RecordService;
 import jakarta.validation.Valid;
@@ -30,57 +29,53 @@ public class RecordController {
 
     private final RecordService recordService;
     private final RecordImportService recordImportService;
+    private final AuthService authService;
 
-    public RecordController(RecordService recordService, RecordImportService recordImportService) {
+    public RecordController(RecordService recordService, RecordImportService recordImportService, AuthService authService) {
         this.recordService = recordService;
         this.recordImportService = recordImportService;
+        this.authService = authService;
     }
 
     @GetMapping
-    public List<LogisticsRecordResponse> list(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
-                                              @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,
+    public List<LogisticsRecordResponse> list(@RequestHeader(value = "Authorization", required = false) String authorization,
                                               @PathVariable Long organizationId) {
-        return recordService.listRecordResponses(new ActorContext(role, organizationHeaderId), organizationId);
+        return recordService.listRecordResponses(authService.requireContext(authorization), organizationId);
     }
 
     @GetMapping("/{recordId}")
-    public LogisticsRecordResponse get(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
-                                       @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,
+    public LogisticsRecordResponse get(@RequestHeader(value = "Authorization", required = false) String authorization,
                                        @PathVariable Long organizationId,
                                        @PathVariable Long recordId) {
-        return recordService.getRecordResponse(new ActorContext(role, organizationHeaderId), organizationId, recordId);
+        return recordService.getRecordResponse(authService.requireContext(authorization), organizationId, recordId);
     }
 
     @PostMapping
-    public LogisticsRecordResponse create(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
-                                          @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,
+    public LogisticsRecordResponse create(@RequestHeader(value = "Authorization", required = false) String authorization,
                                           @PathVariable Long organizationId,
                                           @Valid @RequestBody LogisticsRecordRequest request) {
-        return recordService.createRecordResponse(new ActorContext(role, organizationHeaderId), organizationId, request);
+        return recordService.createRecordResponse(authService.requireContext(authorization), organizationId, request);
     }
 
     @PutMapping("/{recordId}")
-    public LogisticsRecordResponse update(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
-                                          @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,
+    public LogisticsRecordResponse update(@RequestHeader(value = "Authorization", required = false) String authorization,
                                           @PathVariable Long organizationId,
                                           @PathVariable Long recordId,
                                           @Valid @RequestBody LogisticsRecordRequest request) {
-        return recordService.updateRecordResponse(new ActorContext(role, organizationHeaderId), organizationId, recordId, request);
+        return recordService.updateRecordResponse(authService.requireContext(authorization), organizationId, recordId, request);
     }
 
     @DeleteMapping("/{recordId}")
-    public void delete(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
-                       @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,
+    public void delete(@RequestHeader(value = "Authorization", required = false) String authorization,
                        @PathVariable Long organizationId,
                        @PathVariable Long recordId) {
-        recordService.deleteRecord(new ActorContext(role, organizationHeaderId), organizationId, recordId);
+        recordService.deleteRecord(authService.requireContext(authorization), organizationId, recordId);
     }
 
     @PostMapping(value = "/import", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ImportResultResponse importFile(@RequestHeader(value = "X-Role", defaultValue = "SYSTEM_ADMIN") ActorRole role,
-                                           @RequestHeader(value = "X-Organization-Id", required = false) Long organizationHeaderId,
+    public ImportResultResponse importFile(@RequestHeader(value = "Authorization", required = false) String authorization,
                                            @PathVariable Long organizationId,
                                            @RequestPart("file") MultipartFile file) throws IOException {
-        return recordImportService.importFile(new ActorContext(role, organizationHeaderId), organizationId, file);
+        return recordImportService.importFile(authService.requireContext(authorization), organizationId, file);
     }
 }

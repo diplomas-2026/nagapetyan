@@ -8,9 +8,9 @@ import { useOrganizations } from '../hooks/useOrganizations';
 
 export function OrganizationsPage() {
   const navigate = useNavigate();
-  const { role, setRole, organizationId, setOrganizationId, clearSession } = useSession();
-  const { organizations } = useOrganizations(role, organizationId);
-  const canEditOrganizations = role === 'SYSTEM_ADMIN';
+  const { token, user, organizationId, setOrganizationId, clearSession } = useSession();
+  const { organizations } = useOrganizations(token);
+  const canEditOrganizations = user?.role === 'SYSTEM_ADMIN';
 
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
@@ -23,10 +23,9 @@ export function OrganizationsPage() {
     <AppLayout
       title="Логистика и отчетность"
       subtitle="Список организаций"
-      role={role}
+      user={user}
       organizationId={organizationId}
       organizations={organizations}
-      onRoleChange={setRole}
       onOrganizationChange={handleOrganizationChange}
       onLogout={() => {
         clearSession();
@@ -58,7 +57,15 @@ export function OrganizationsPage() {
           </TableHead>
           <TableBody>
             {organizations.map((item) => (
-              <TableRow key={item.id} hover sx={{ cursor: 'pointer' }} onClick={() => navigate(`/organizations/${item.id}`)}>
+              <TableRow
+                key={item.id}
+                hover
+                sx={{ cursor: 'pointer' }}
+                onClick={() => {
+                  setOrganizationId(String(item.id));
+                  navigate(`/organizations/${item.id}`);
+                }}
+              >
                 <TableCell>{item.name}</TableCell>
                 <TableCell>{item.inn}</TableCell>
                 <TableCell>{item.region}</TableCell>

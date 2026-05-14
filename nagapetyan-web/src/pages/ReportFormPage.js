@@ -22,10 +22,16 @@ export function ReportFormPage({ mode }) {
   const navigate = useNavigate();
   const { organizationId, reportId } = useParams();
   const isEdit = mode === 'edit';
-  const { role, setRole, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
-  const { organizations } = useOrganizations(role, sessionOrganizationId);
+  const { token, user, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
+  const { organizations } = useOrganizations(token);
   const [form, setForm] = useState(emptyReport);
   const [message, setMessage] = useState(null);
+
+  useEffect(() => {
+    if (organizationId) {
+      setOrganizationId(organizationId);
+    }
+  }, [organizationId, setOrganizationId]);
 
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
@@ -36,18 +42,18 @@ export function ReportFormPage({ mode }) {
 
   useEffect(() => {
     if (isEdit) {
-      api.getReport(role, organizationId, reportId).then(setForm).catch((error) => setMessage(error.message));
+      api.getReport(token, organizationId, reportId).then(setForm).catch((error) => setMessage(error.message));
     }
-  }, [isEdit, organizationId, reportId, role]);
+  }, [isEdit, organizationId, reportId, token]);
 
   async function save() {
     try {
       if (isEdit) {
-        await api.updateReport(role, organizationId, reportId, form);
+        await api.updateReport(token, organizationId, reportId, form);
         navigate(`/organizations/${organizationId}/reports/${reportId}`);
         return;
       }
-      const created = await api.createReport(role, organizationId, form);
+      const created = await api.createReport(token, organizationId, form);
       navigate(`/organizations/${organizationId}/reports/${created.id}`);
     } catch (error) {
       setMessage(error.message);
@@ -58,10 +64,9 @@ export function ReportFormPage({ mode }) {
     <AppLayout
       title="Логистика и отчетность"
       subtitle={isEdit ? 'Редактирование отчета' : 'Новый отчет'}
-      role={role}
+      user={user}
       organizationId={sessionOrganizationId}
       organizations={organizations}
-      onRoleChange={setRole}
       onOrganizationChange={handleOrganizationChange}
       onLogout={() => {
         clearSession();
