@@ -154,6 +154,7 @@ export function OrganizationDetailsPage() {
                     <TableCell>Маршрут</TableCell>
                     <TableCell>Статус</TableCell>
                     <TableCell>Срок</TableCell>
+                    <TableCell />
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -163,6 +164,14 @@ export function OrganizationDetailsPage() {
                       hover
                       sx={{ cursor: 'pointer' }}
                       onClick={() => navigate(`/organizations/${organizationId}/reports/${item.id}`)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          navigate(`/organizations/${organizationId}/reports/${item.id}`);
+                        }
+                      }}
                     >
                       <TableCell>{item.shipmentNumber}</TableCell>
                       <TableCell>
@@ -172,6 +181,11 @@ export function OrganizationDetailsPage() {
                         <Chip size="small" label={item.status} color={item.delayed ? 'error' : 'success'} variant="outlined" />
                       </TableCell>
                       <TableCell>{item.transitDays} дн.</TableCell>
+                      <TableCell align="right">
+                        <Button component={Link} to={`/organizations/${organizationId}/reports/${item.id}`} size="small">
+                          Details
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
