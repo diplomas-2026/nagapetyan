@@ -1,5 +1,6 @@
 import { AppBar, Box, Button, Chip, FormControl, InputLabel, MenuItem, Paper, Select, Stack, Toolbar, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
+import { getRoleLabel } from '../utils/labels';
 
 export function AppLayout({
   title,
@@ -28,7 +29,7 @@ export function AppLayout({
           {user ? (
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
               <Chip label={user.fullName || user.login} variant="outlined" />
-              <Chip label={user.role} color="primary" variant="outlined" />
+              <Chip label={getRoleLabel(user.role)} color="primary" variant="outlined" />
             </Stack>
           ) : null}
 

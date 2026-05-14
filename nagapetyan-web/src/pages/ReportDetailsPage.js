@@ -6,6 +6,7 @@ import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
 import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
+import { getReportStatusLabel } from '../utils/labels';
 
 export function ReportDetailsPage() {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ export function ReportDetailsPage() {
             <Stack spacing={1}>
               <Typography>Номер: {report?.shipmentNumber || '-'}</Typography>
               <Typography>Маршрут: {report?.routeFrom || '-'} → {report?.routeTo || '-'}</Typography>
-              <Typography>Статус: {report?.status || '-'}</Typography>
+              <Typography>Статус: {getReportStatusLabel(report?.status)}</Typography>
               <Typography>Дата отправки: {report?.shippedAt || '-'}</Typography>
               <Typography>Плановая доставка: {report?.plannedDeliveryDate || '-'}</Typography>
               <Typography>Фактическая доставка: {report?.deliveredAt || '-'}</Typography>

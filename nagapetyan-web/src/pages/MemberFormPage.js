@@ -5,6 +5,7 @@ import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
 import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
+import { getRoleLabel } from '../utils/labels';
 
 const emptyMember = {
   login: '',
@@ -102,8 +103,8 @@ export function MemberFormPage({ mode }) {
             <FormControl fullWidth>
               <InputLabel>Роль</InputLabel>
               <Select value={form.role} label="Роль" onChange={(event) => setForm({ ...form, role: event.target.value })}>
-                <MenuItem value="OWNER">Владелец</MenuItem>
-                <MenuItem value="EMPLOYEE">Сотрудник</MenuItem>
+                <MenuItem value="OWNER">{getRoleLabel('OWNER')}</MenuItem>
+                <MenuItem value="EMPLOYEE">{getRoleLabel('EMPLOYEE')}</MenuItem>
               </Select>
             </FormControl>
             <Stack direction="row" spacing={2} flexWrap="wrap">

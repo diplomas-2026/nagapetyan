@@ -6,6 +6,7 @@ import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
 import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
+import { getRoleLabel } from '../utils/labels';
 
 export function MemberDetailsPage() {
   const navigate = useNavigate();
@@ -59,7 +60,7 @@ export function MemberDetailsPage() {
               <Typography>ФИО: {member?.fullName || '-'}</Typography>
               <Typography>Email: {member?.email || '-'}</Typography>
               <Typography>Должность: {member?.position || '-'}</Typography>
-              <Typography>Роль: {member?.role || '-'}</Typography>
+              <Typography>Роль: {getRoleLabel(member?.role)}</Typography>
             </Stack>
           </CardContent>
         </Card>

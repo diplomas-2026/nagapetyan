@@ -10,6 +10,7 @@ import { SummaryCards } from '../components/SummaryCards';
 import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
 import { useOrganizationDetails } from '../hooks/useOrganizationDetails';
+import { getReportStatusLabel, getRoleLabel } from '../utils/labels';
 
 export function OrganizationDetailsPage() {
   const navigate = useNavigate();
@@ -150,7 +151,7 @@ export function OrganizationDetailsPage() {
                       <TableCell>{item.email}</TableCell>
                       <TableCell>{item.position}</TableCell>
                       <TableCell>
-                        <Chip size="small" label={item.role} variant="outlined" />
+                        <Chip size="small" label={getRoleLabel(item.role)} variant="outlined" />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -194,7 +195,12 @@ export function OrganizationDetailsPage() {
                         {item.routeFrom} → {item.routeTo}
                       </TableCell>
                       <TableCell>
-                        <Chip size="small" label={item.status} color={item.delayed ? 'error' : 'success'} variant="outlined" />
+                        <Chip
+                          size="small"
+                          label={getReportStatusLabel(item.status)}
+                          color={item.delayed ? 'error' : 'success'}
+                          variant="outlined"
+                        />
                       </TableCell>
                       <TableCell>{item.transitDays} дн.</TableCell>
                       <TableCell align="right">
