@@ -58,10 +58,6 @@ export function LoginPage() {
                 Войти
               </Button>
             </Stack>
-
-            <Alert severity="info">
-              Демо-доступ: <b>admin / admin123</b>
-            </Alert>
           </Stack>
         </Paper>
       </Container>
