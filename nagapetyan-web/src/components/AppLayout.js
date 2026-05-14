@@ -33,7 +33,7 @@ export function AppLayout({
           ) : null}
 
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            <Button component={Link} to="/organizations" variant="outlined">
+            <Button component={Link} to="/organizations" reloadDocument variant="outlined">
               Организации
             </Button>
             <Button variant="text" onClick={onLogout}>
