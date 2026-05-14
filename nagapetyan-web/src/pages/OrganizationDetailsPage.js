@@ -36,6 +36,10 @@ export function OrganizationDetailsPage() {
     window.location.assign(`/organizations/${organizationId}/reports/${reportId}`);
   }
 
+  function openMemberDetails(memberId) {
+    window.location.assign(`/organizations/${organizationId}/members/${memberId}`);
+  }
+
   const summaryCards = dashboard?.summary
     ? [
         { label: 'Всего отправлений', value: dashboard.summary.totalRecords },
@@ -131,7 +135,15 @@ export function OrganizationDetailsPage() {
                       key={item.id}
                       hover
                       sx={{ cursor: 'pointer' }}
-                      onClick={() => navigate(`/organizations/${organizationId}/members/${item.id}`)}
+                      onClick={() => openMemberDetails(item.id)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          openMemberDetails(item.id);
+                        }
+                      }}
                     >
                       <TableCell>{item.login}</TableCell>
                       <TableCell>{item.fullName}</TableCell>

@@ -19,6 +19,10 @@ export function OrganizationsPage() {
     }
   }
 
+  function openOrganizationDetails(organizationIdValue) {
+    window.location.assign(`/organizations/${organizationIdValue}`);
+  }
+
   return (
     <AppLayout
       title="Логистика и отчетность"
@@ -63,7 +67,16 @@ export function OrganizationsPage() {
                 sx={{ cursor: 'pointer' }}
                 onClick={() => {
                   setOrganizationId(String(item.id));
-                  navigate(`/organizations/${item.id}`);
+                  openOrganizationDetails(item.id);
+                }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setOrganizationId(String(item.id));
+                    openOrganizationDetails(item.id);
+                  }
                 }}
               >
                 <TableCell>{item.name}</TableCell>
