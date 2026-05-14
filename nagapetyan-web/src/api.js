@@ -1,4 +1,9 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const defaultApiBase =
+  window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:8080/api'
+    : 'https://nagapetyan.danbel.ru/api';
+
+const API_BASE_URL = process.env.REACT_APP_API_URL || defaultApiBase;
 
 async function request(path, { method = 'GET', body, role, organizationId, isFormData = false } = {}) {
   const headers = {

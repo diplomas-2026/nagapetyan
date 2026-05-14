@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,7 +54,7 @@ public class RecordImportService {
     }
 
     private List<LogisticsRecordRequest> parseCsv(byte[] content) {
-        String text = new String(content);
+        String text = new String(content, StandardCharsets.UTF_8);
         String[] lines = text.split("\\R");
         if (lines.length < 2) {
             return List.of();
