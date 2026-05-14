@@ -137,6 +137,7 @@ public class InMemoryStore {
         entity.setOrganizationId(session.organizationId());
         entity.setLogin(session.login());
         entity.setFullName(session.fullName());
+        entity.setCreatedAt(java.time.Instant.now());
         authSessionRepository.save(entity);
     }
 
