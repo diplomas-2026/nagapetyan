@@ -18,14 +18,31 @@ function RequireAuth({ children }) {
   return children;
 }
 
+function RequireGuest({ children }) {
+  const { token, user } = useSession();
+  if (token && user) {
+    return <Navigate to="/organizations" replace />;
+  }
+  return children;
+}
+
 function AppRoutes() {
   const location = useLocation();
+  const { token, user } = useSession();
+  const hasSession = Boolean(token && user);
 
   return (
     <Routes location={location} key={location.pathname}>
-      <Route path="/" element={<Navigate to="/login" replace />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<Navigate to={hasSession ? '/organizations' : '/login'} replace />} />
+      <Route
+        path="/login"
+        element={
+          <RequireGuest>
+            <LoginPage />
+          </RequireGuest>
+        }
+      />
+      <Route path="/register" element={<Navigate to={hasSession ? '/organizations' : '/login'} replace />} />
       <Route
         path="/cabinet"
         element={
@@ -122,7 +139,7 @@ function AppRoutes() {
           </RequireAuth>
         }
       />
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to={hasSession ? '/organizations' : '/login'} replace />} />
     </Routes>
   );
 }
