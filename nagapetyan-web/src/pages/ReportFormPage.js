@@ -63,7 +63,7 @@ export function ReportFormPage({ mode }) {
   return (
     <AppLayout
       title="Логистика и отчетность"
-      subtitle={isEdit ? 'Редактирование отчета' : 'Новый отчет'}
+      subtitle={isEdit ? 'Редактирование отправления' : 'Новое отправление'}
       user={user}
       organizationId={sessionOrganizationId}
       organizations={organizations}
@@ -76,7 +76,7 @@ export function ReportFormPage({ mode }) {
       <Card>
         <CardContent>
           <Stack spacing={3}>
-            <Typography variant="h4">{isEdit ? 'Редактирование отчета' : 'Новый отчет'}</Typography>
+            <Typography variant="h4">{isEdit ? 'Редактирование отправления' : 'Новое отправление'}</Typography>
             <TextField label="Номер отправления" value={form.shipmentNumber} onChange={(event) => setForm({ ...form, shipmentNumber: event.target.value })} fullWidth />
             <TextField label="Откуда" value={form.routeFrom} onChange={(event) => setForm({ ...form, routeFrom: event.target.value })} fullWidth />
             <TextField label="Куда" value={form.routeTo} onChange={(event) => setForm({ ...form, routeTo: event.target.value })} fullWidth />

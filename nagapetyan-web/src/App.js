@@ -7,6 +7,7 @@ import { MemberDetailsPage } from './pages/MemberDetailsPage';
 import { MemberFormPage } from './pages/MemberFormPage';
 import { ReportDetailsPage } from './pages/ReportDetailsPage';
 import { ReportFormPage } from './pages/ReportFormPage';
+import { ReportImportPage } from './pages/ReportImportPage';
 import { SessionProvider, useSession } from './hooks/useSession';
 
 function RequireAuth({ children }) {
@@ -94,6 +95,14 @@ function App() {
             element={
               <RequireAuth>
                 <ReportFormPage mode="create" />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/organizations/:organizationId/reports/import"
+            element={
+              <RequireAuth>
+                <ReportImportPage />
               </RequireAuth>
             }
           />

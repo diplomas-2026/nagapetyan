@@ -35,7 +35,7 @@ export function ReportDetailsPage() {
   return (
     <AppLayout
       title="Логистика и отчетность"
-      subtitle="Details отчета"
+      subtitle="Details отправления"
       user={user}
       organizationId={sessionOrganizationId}
       organizations={organizations}
@@ -51,7 +51,7 @@ export function ReportDetailsPage() {
       ) : null}
     >
       <Stack spacing={3}>
-        <Typography variant="h4">Отчет</Typography>
+        <Typography variant="h4">Отправление</Typography>
         <Card>
           <CardContent>
             <Stack spacing={1}>

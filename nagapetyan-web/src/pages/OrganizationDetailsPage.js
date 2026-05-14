@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Box, Button, Card, CardContent, Chip, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
+import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { AppLayout } from '../components/AppLayout';
 import { SectionTabs } from '../components/SectionTabs';
@@ -33,7 +34,7 @@ export function OrganizationDetailsPage() {
 
   const summaryCards = dashboard?.summary
     ? [
-        { label: 'Всего записей', value: dashboard.summary.totalRecords },
+        { label: 'Всего отправлений', value: dashboard.summary.totalRecords },
         { label: 'Вовремя', value: dashboard.summary.deliveredOnTime },
         { label: 'С задержкой', value: dashboard.summary.delayed },
         { label: 'Процент вовремя', value: `${dashboard.summary.onTimePercent.toFixed(1)}%` },
@@ -68,8 +69,11 @@ export function OrganizationDetailsPage() {
               <Button component={Link} to={`/organizations/${organizationId}/members/new?role=EMPLOYEE`} variant="outlined" startIcon={<AddIcon />}>
                 Сотрудник
               </Button>
+              <Button component={Link} to={`/organizations/${organizationId}/reports/import`} variant="outlined" startIcon={<UploadFileIcon />}>
+                Загрузить отчет
+              </Button>
               <Button component={Link} to={`/organizations/${organizationId}/reports/new`} variant="contained" startIcon={<AddIcon />}>
-                Отчет
+                Отправление
               </Button>
             </>
           ) : null}
@@ -82,7 +86,7 @@ export function OrganizationDetailsPage() {
             {organization?.name || 'Организация'}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Просмотр данных организации, сотрудников и логистических отчетов.
+            Просмотр данных организации, сотрудников и отправлений.
           </Typography>
         </Box>
 
@@ -123,8 +127,8 @@ export function OrganizationDetailsPage() {
                       key={item.id}
                       hover
                       sx={{ cursor: 'pointer' }}
-                    onClick={() => navigate(`/organizations/${organizationId}/members/${item.id}`)}
-                  >
+                      onClick={() => navigate(`/organizations/${organizationId}/members/${item.id}`)}
+                    >
                       <TableCell>{item.login}</TableCell>
                       <TableCell>{item.fullName}</TableCell>
                       <TableCell>{item.email}</TableCell>
@@ -146,7 +150,7 @@ export function OrganizationDetailsPage() {
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Номер</TableCell>
+                    <TableCell>Номер отправления</TableCell>
                     <TableCell>Маршрут</TableCell>
                     <TableCell>Статус</TableCell>
                     <TableCell>Срок</TableCell>
