@@ -32,6 +32,10 @@ export function OrganizationDetailsPage() {
     }
   }
 
+  function openReportDetails(reportId) {
+    window.location.assign(`/organizations/${organizationId}/reports/${reportId}`);
+  }
+
   const summaryCards = dashboard?.summary
     ? [
         { label: 'Всего отправлений', value: dashboard.summary.totalRecords },
@@ -163,13 +167,13 @@ export function OrganizationDetailsPage() {
                       key={item.id}
                       hover
                       sx={{ cursor: 'pointer' }}
-                      onClick={() => navigate(`/organizations/${organizationId}/reports/${item.id}`)}
+                      onClick={() => openReportDetails(item.id)}
                       role="button"
                       tabIndex={0}
                       onKeyDown={(event) => {
                         if (event.key === 'Enter' || event.key === ' ') {
                           event.preventDefault();
-                          navigate(`/organizations/${organizationId}/reports/${item.id}`);
+                          openReportDetails(item.id);
                         }
                       }}
                     >
@@ -182,7 +186,7 @@ export function OrganizationDetailsPage() {
                       </TableCell>
                       <TableCell>{item.transitDays} дн.</TableCell>
                       <TableCell align="right">
-                        <Button component={Link} to={`/organizations/${organizationId}/reports/${item.id}`} size="small">
+                        <Button component={Link} to={`/organizations/${organizationId}/reports/${item.id}`} reloadDocument size="small">
                           Details
                         </Button>
                       </TableCell>
