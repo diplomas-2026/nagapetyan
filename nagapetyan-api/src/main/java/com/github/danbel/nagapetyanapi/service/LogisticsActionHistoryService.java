@@ -1,7 +1,6 @@
 package com.github.danbel.nagapetyanapi.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.danbel.nagapetyanapi.dto.LogisticsActionHistoryResponse;
 import com.github.danbel.nagapetyanapi.dto.LogisticsRecordSnapshot;
 import com.github.danbel.nagapetyanapi.model.ActorContext;
@@ -11,6 +10,7 @@ import com.github.danbel.nagapetyanapi.model.LogisticsRecord;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -185,22 +185,14 @@ public class LogisticsActionHistoryService {
         if (snapshot == null) {
             return null;
         }
-        try {
-            return objectMapper.writeValueAsString(snapshot);
-        } catch (JsonProcessingException exception) {
-            throw new IllegalStateException("Не удалось сохранить историю действия", exception);
-        }
+        return objectMapper.writeValueAsString(snapshot);
     }
 
     private LogisticsRecordSnapshot deserialize(String json) {
         if (json == null || json.isBlank()) {
             return null;
         }
-        try {
-            return objectMapper.readValue(json, LogisticsRecordSnapshot.class);
-        } catch (JsonProcessingException exception) {
-            throw new IllegalStateException("Не удалось восстановить отправление", exception);
-        }
+        return objectMapper.readValue(json, LogisticsRecordSnapshot.class);
     }
 
     private LogisticsRecordSnapshot snapshot(LogisticsRecord record) {
