@@ -54,6 +54,9 @@ export function ReportDetailsPage() {
 
   const statusTone = useMemo(() => getStatusTone(report), [report]);
   const routeLabel = `${report?.routeFrom || '-'} → ${report?.routeTo || '-'}`;
+  function openPoint(url) {
+    window.location.assign(url);
+  }
   const infoCards = useMemo(
     () => [
       { label: 'Номер', value: report?.shipmentNumber || '-' },
@@ -159,13 +162,16 @@ export function ReportDetailsPage() {
                         Пункт отправки
                       </Typography>
                       <Button
-                        component={Link}
-                        to={buildPointUrl(organizationId, {
-                          kind: 'from',
-                          name: report?.routeFrom,
-                          latitude: report?.routeFromLatitude,
-                          longitude: report?.routeFromLongitude,
-                        })}
+                        onClick={() =>
+                          openPoint(
+                            buildPointUrl(organizationId, {
+                              kind: 'from',
+                              name: report?.routeFrom,
+                              latitude: report?.routeFromLatitude,
+                              longitude: report?.routeFromLongitude,
+                            }),
+                          )
+                        }
                         variant="text"
                         sx={{ alignSelf: 'flex-start', px: 0, minWidth: 0 }}
                         disabled={!report?.routeFrom}
@@ -186,13 +192,16 @@ export function ReportDetailsPage() {
                         Пункт назначения
                       </Typography>
                       <Button
-                        component={Link}
-                        to={buildPointUrl(organizationId, {
-                          kind: 'to',
-                          name: report?.routeTo,
-                          latitude: report?.routeToLatitude,
-                          longitude: report?.routeToLongitude,
-                        })}
+                        onClick={() =>
+                          openPoint(
+                            buildPointUrl(organizationId, {
+                              kind: 'to',
+                              name: report?.routeTo,
+                              latitude: report?.routeToLatitude,
+                              longitude: report?.routeToLongitude,
+                            }),
+                          )
+                        }
                         variant="text"
                         sx={{ alignSelf: 'flex-start', px: 0, minWidth: 0 }}
                         disabled={!report?.routeTo}

@@ -115,6 +115,10 @@ export function PointAnalyticsPage() {
     { label: 'Вовремя', value: pointStats.onTimeCount },
   ];
 
+  function openReportDetails(reportId) {
+    window.location.assign(`/organizations/${organizationId}/reports/${reportId}`);
+  }
+
   return (
     <AppLayout
       title="Логистика и отчетность"
@@ -238,7 +242,7 @@ export function PointAnalyticsPage() {
                             <Chip size="small" label={getReportStatusLabel(item.status)} color={getStatusColor(item.status, item.delayed)} variant="outlined" />
                           </TableCell>
                           <TableCell align="right">
-                            <Button component={Link} to={`/organizations/${organizationId}/reports/${item.id}`} reloadDocument size="small">
+                            <Button onClick={() => openReportDetails(item.id)} size="small">
                               Details
                             </Button>
                           </TableCell>
@@ -280,7 +284,7 @@ export function PointAnalyticsPage() {
                             <Chip size="small" label={getReportStatusLabel(item.status)} color={getStatusColor(item.status, item.delayed)} variant="outlined" />
                           </TableCell>
                           <TableCell align="right">
-                            <Button component={Link} to={`/organizations/${organizationId}/reports/${item.id}`} reloadDocument size="small">
+                            <Button onClick={() => openReportDetails(item.id)} size="small">
                               Details
                             </Button>
                           </TableCell>
