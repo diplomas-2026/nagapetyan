@@ -1,25 +1,9 @@
 import { useMemo } from 'react';
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  Cell,
-  CartesianGrid,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
 import { formatMoney, formatWeight } from '../utils/formatters';
 import { getReportStatusLabel, getRoleLabel } from '../utils/labels';
 
-const ROLE_COLORS = ['#0f766e', '#2563eb', '#7c3aed'];
+const ROLE_COLORS = ['#0f766e', '#2563eb', '#7c3aed', '#db2777'];
 const STATUS_COLORS = ['#16a34a', '#f59e0b', '#dc2626', '#6b7280'];
 const TREND_COLORS = ['#2563eb', '#14b8a6', '#f59e0b'];
 
@@ -66,10 +50,136 @@ function groupMonthly(reports) {
     }));
 }
 
-function ChartFrame({ children }) {
+function MiniBarChart({ items, color, valueFormatter = (value) => String(value), labelSuffix = '', maxWidth = 320 }) {
+  const max = Math.max(1, ...items.map((item) => Number(item.value || 0)));
+
   return (
-    <Box sx={{ width: '100%', minWidth: 0, overflowX: 'auto' }}>
-      <Box sx={{ minWidth: 760 }}>{children}</Box>
+    <Stack spacing={1.25}>
+      {items.map((item) => {
+        const percentage = Math.max(4, Math.round((Number(item.value || 0) / max) * 100));
+        return (
+          <Box key={item.name} sx={{ display: 'grid', gridTemplateColumns: 'minmax(110px, 1fr) minmax(0, 2fr) auto', gap: 1.25, alignItems: 'center' }}>
+            <Typography variant="body2" color="text.secondary" noWrap>
+              {item.name}
+            </Typography>
+            <Box sx={{ height: 12, borderRadius: 999, bgcolor: 'rgba(15, 23, 42, 0.07)', overflow: 'hidden' }}>
+              <Box
+                sx={{
+                  width: `${percentage}%`,
+                  maxWidth: maxWidth,
+                  height: '100%',
+                  borderRadius: 999,
+                  bgcolor: color,
+                }}
+              />
+            </Box>
+            <Typography variant="body2" fontWeight={700} sx={{ whiteSpace: 'nowrap' }}>
+              {valueFormatter(item.value)}
+              {labelSuffix}
+            </Typography>
+          </Box>
+        );
+      })}
+    </Stack>
+  );
+}
+
+function TrendSparkline({ data, stroke = '#2563eb', label }) {
+  const width = 820;
+  const height = 220;
+  const paddingX = 24;
+  const paddingY = 20;
+  const values = data.map((item) => Number(item.value || 0));
+  const max = Math.max(1, ...values);
+  const min = Math.min(0, ...values);
+  const points = data.map((item, index) => {
+    const x = paddingX + (index * (width - paddingX * 2)) / Math.max(1, data.length - 1);
+    const normalized = (Number(item.value || 0) - min) / Math.max(1, max - min);
+    const y = height - paddingY - normalized * (height - paddingY * 2);
+    return `${x},${y}`;
+  });
+
+  const area = `M ${paddingX},${height - paddingY} L ${points.join(' L ')} L ${width - paddingX},${height - paddingY} Z`;
+
+  return (
+    <Box sx={{ width: '100%', overflowX: 'auto' }}>
+      <Box sx={{ minWidth: width }}>
+        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="img" aria-label={label}>
+          <defs>
+            <linearGradient id={`trend-${stroke.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor={stroke} stopOpacity={0.28} />
+              <stop offset="95%" stopColor={stroke} stopOpacity={0.02} />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width={width} height={height} rx="20" fill="#f8fafc" />
+          {[0, 1, 2, 3].map((step) => {
+            const y = paddingY + ((height - paddingY * 2) / 3) * step;
+            return <line key={step} x1={paddingX} y1={y} x2={width - paddingX} y2={y} stroke="#e2e8f0" strokeDasharray="4 4" />;
+          })}
+          <path d={area} fill={`url(#trend-${stroke.replace('#', '')})`} />
+          <polyline fill="none" stroke={stroke} strokeWidth="4" strokeLinejoin="round" strokeLinecap="round" points={points.join(' ')} />
+          {data.map((item, index) => {
+            const x = paddingX + (index * (width - paddingX * 2)) / Math.max(1, data.length - 1);
+            const normalized = (Number(item.value || 0) - min) / Math.max(1, max - min);
+            const y = height - paddingY - normalized * (height - paddingY * 2);
+            return (
+              <g key={item.name}>
+                <circle cx={x} cy={y} r="5" fill={stroke} />
+                <text x={x} y={height - 2} textAnchor="middle" fontSize="12" fill="#64748b">
+                  {item.name}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </Box>
+    </Box>
+  );
+}
+
+function RingSummary({ items, colors }) {
+  const total = items.reduce((sum, item) => sum + Number(item.value || 0), 0) || 1;
+  let cumulative = 0;
+
+  return (
+    <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 280px) minmax(0, 1fr)' }, alignItems: 'center' }}>
+      <Box
+        sx={{
+          width: 260,
+          height: 260,
+          mx: 'auto',
+          borderRadius: '50%',
+          background: `conic-gradient(${items
+            .map((item, index) => {
+              const start = cumulative;
+              cumulative += (Number(item.value || 0) / total) * 360;
+              return `${colors[index % colors.length]} ${start}deg ${cumulative}deg`;
+            })
+            .join(', ')})`,
+          position: 'relative',
+          '&::after': {
+            content: '""',
+            position: 'absolute',
+            inset: 40,
+            borderRadius: '50%',
+            bgcolor: 'background.paper',
+            boxShadow: 'inset 0 0 0 1px rgba(148, 163, 184, 0.2)',
+          },
+        }}
+      />
+      <Stack spacing={1.25}>
+        {items.map((item, index) => (
+          <Stack key={item.name} direction="row" alignItems="center" spacing={1.25}>
+            <Box sx={{ width: 14, height: 14, borderRadius: '50%', bgcolor: colors[index % colors.length] }} />
+            <Typography variant="body2" sx={{ flexGrow: 1 }}>
+              {item.name}
+            </Typography>
+            <Typography variant="body2" fontWeight={700}>
+              {item.value}
+            </Typography>
+          </Stack>
+        ))}
+      </Stack>
     </Box>
   );
 }
@@ -84,6 +194,9 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
     const monthly = groupMonthly(reports);
+    const topRoutes = groupBy(reports, (item) => `${item.routeFrom || '—'} → ${item.routeTo || '—'}`)
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
     const totalWeight = reports.reduce((sum, item) => sum + Number(item.weight || 0), 0);
     const totalCost = reports.reduce((sum, item) => sum + Number(item.cost || 0), 0);
     const delayedCount = reports.filter((item) => item.delayed).length;
@@ -95,19 +208,12 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
       reportsByStatus,
       topDestinations,
       monthly,
+      topRoutes,
       totalWeight,
       totalCost,
       delayedCount,
     };
   }, [members, reports]);
-
-  const topRoutes = useMemo(
-    () =>
-      groupBy(reports, (item) => `${item.routeFrom || '—'} → ${item.routeTo || '—'}`)
-        .sort((a, b) => b.value - a.value)
-        .slice(0, 5),
-    [reports],
-  );
 
   const deliveredOnTime = dashboard?.summary?.deliveredOnTime ?? 0;
   const delayed = dashboard?.summary?.delayed ?? stats.delayedCount;
@@ -123,8 +229,6 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
     { label: 'Суммарный вес', value: formatWeight(stats.totalWeight) },
     { label: 'Суммарная стоимость', value: formatMoney(stats.totalCost) },
   ];
-
-  const chartWidth = 760;
 
   return (
     <Stack spacing={3}>
@@ -191,21 +295,7 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Сотрудники по ролям</Typography>
-              <ChartFrame>
-                <PieChart width={chartWidth} height={320}>
-                  <Pie data={stats.membersByRole} dataKey="value" nameKey="name" innerRadius={75} outerRadius={120} cx={chartWidth / 2} cy={160} paddingAngle={4}>
-                    {stats.membersByRole.map((entry, index) => (
-                      <Cell key={entry.name} fill={ROLE_COLORS[index % ROLE_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ChartFrame>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {stats.membersByRole.map((item, index) => (
-                  <Chip key={item.name} label={`${item.name}: ${item.value}`} sx={{ bgcolor: `${ROLE_COLORS[index % ROLE_COLORS.length]}15`, borderColor: `${ROLE_COLORS[index % ROLE_COLORS.length]}40` }} variant="outlined" />
-                ))}
-              </Stack>
+              <RingSummary items={stats.membersByRole} colors={ROLE_COLORS} />
             </Stack>
           </CardContent>
         </Card>
@@ -214,21 +304,7 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Статусы отправлений</Typography>
-              <ChartFrame>
-                <PieChart width={chartWidth} height={320}>
-                  <Pie data={stats.reportsByStatus} dataKey="value" nameKey="name" innerRadius={75} outerRadius={120} cx={chartWidth / 2} cy={160} paddingAngle={4}>
-                    {stats.reportsByStatus.map((entry, index) => (
-                      <Cell key={entry.name} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ChartFrame>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {stats.reportsByStatus.map((item, index) => (
-                  <Chip key={item.name} label={`${item.name}: ${item.value}`} sx={{ bgcolor: `${STATUS_COLORS[index % STATUS_COLORS.length]}15`, borderColor: `${STATUS_COLORS[index % STATUS_COLORS.length]}40` }} variant="outlined" />
-                ))}
-              </Stack>
+              <RingSummary items={stats.reportsByStatus} colors={STATUS_COLORS} />
             </Stack>
           </CardContent>
         </Card>
@@ -248,68 +324,17 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Динамика отправлений по месяцам</Typography>
-              <ChartFrame>
-                <LineChart data={stats.monthly} width={chartWidth} height={320}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="label" />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
-                  <Legend />
-                  <Line type="monotone" dataKey="shipments" stroke={TREND_COLORS[0]} strokeWidth={3} dot={{ r: 3 }} name="Отправления" />
-                  <Line type="monotone" dataKey="weight" stroke={TREND_COLORS[1]} strokeWidth={3} dot={{ r: 3 }} name="Вес, кг" />
-                  <Line type="monotone" dataKey="cost" stroke={TREND_COLORS[2]} strokeWidth={3} dot={{ r: 3 }} name="Стоимость, руб." />
-                </LineChart>
-              </ChartFrame>
+              <TrendSparkline data={stats.monthly.map((item) => ({ name: item.label, value: item.shipments }))} stroke={TREND_COLORS[0]} label="Динамика отправлений" />
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {stats.monthly.map((item) => (
+                  <Chip key={item.label} label={`${item.label}: ${item.shipments}`} variant="outlined" />
+                ))}
+              </Stack>
             </Stack>
           </CardContent>
         </Card>
 
         <Card variant="outlined" sx={{ minWidth: 0 }}>
-          <CardContent>
-            <Stack spacing={2}>
-              <Typography variant="h6">Топ направлений</Typography>
-              <ChartFrame>
-                <BarChart data={topRoutes} layout="vertical" width={chartWidth} height={320}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" allowDecimals={false} />
-                  <YAxis type="category" dataKey="name" width={120} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#2563eb" radius={[0, 8, 8, 0]} />
-                </BarChart>
-              </ChartFrame>
-            </Stack>
-          </CardContent>
-        </Card>
-      </Box>
-
-      <Box
-        sx={{
-          display: 'grid',
-          gap: 2,
-          gridTemplateColumns: {
-            xs: '1fr',
-            lg: 'repeat(2, minmax(0, 1fr))',
-          },
-        }}
-      >
-        <Card variant="outlined" sx={{ minWidth: 0 }}>
-          <CardContent>
-            <Stack spacing={2}>
-              <Typography variant="h6">Топ получателей</Typography>
-              <ChartFrame>
-                <BarChart data={stats.topDestinations} width={chartWidth} height={280}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" interval={0} angle={-15} textAnchor="end" height={70} />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#0f766e" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ChartFrame>
-            </Stack>
-          </CardContent>
-        </Card>
-
-        <Card variant="outlined">
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Показатели в цифрах</Typography>
@@ -325,31 +350,79 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
         </Card>
       </Box>
 
+      <Box
+        sx={{
+          display: 'grid',
+          gap: 2,
+          gridTemplateColumns: {
+            xs: '1fr',
+            lg: 'repeat(2, minmax(0, 1fr))',
+          },
+        }}
+      >
+        <Card variant="outlined">
+          <CardContent>
+            <Stack spacing={2}>
+              <Typography variant="h6">Топ направлений</Typography>
+              <MiniBarChart items={stats.topRoutes} color="#2563eb" valueFormatter={(value) => value} />
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Card variant="outlined">
+          <CardContent>
+            <Stack spacing={2}>
+              <Typography variant="h6">Топ получателей</Typography>
+              <MiniBarChart items={stats.topDestinations} color="#0f766e" valueFormatter={(value) => value} />
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
+
       <Card variant="outlined" sx={{ minWidth: 0 }}>
         <CardContent>
           <Stack spacing={2}>
             <Typography variant="h6">Комбинированная динамика</Typography>
-            <ChartFrame>
-              <AreaChart data={stats.monthly} width={chartWidth} height={320}>
-                <defs>
-                  <linearGradient id="shipmentsColor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0.1} />
-                  </linearGradient>
-                  <linearGradient id="weightColor" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#14b8a6" stopOpacity={0.1} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="label" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Area type="monotone" dataKey="shipments" stroke="#2563eb" fillOpacity={1} fill="url(#shipmentsColor)" name="Отправления" />
-                <Area type="monotone" dataKey="weight" stroke="#14b8a6" fillOpacity={1} fill="url(#weightColor)" name="Вес, кг" />
-              </AreaChart>
-            </ChartFrame>
+            <TrendSparkline
+              data={stats.monthly.map((item) => ({
+                name: item.label,
+                value: item.weight,
+              }))}
+              stroke={TREND_COLORS[1]}
+              label="Динамика веса отправлений"
+            />
+            <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: 'repeat(3, minmax(0, 1fr))' } }}>
+              <Card variant="outlined">
+                <CardContent>
+                  <Stack spacing={1}>
+                    <Typography variant="caption" color="text.secondary">
+                      Суммарный вес
+                    </Typography>
+                    <Typography variant="h6">{formatWeight(stats.totalWeight)}</Typography>
+                  </Stack>
+                </CardContent>
+              </Card>
+              <Card variant="outlined">
+                <CardContent>
+                  <Stack spacing={1}>
+                    <Typography variant="caption" color="text.secondary">
+                      Суммарная стоимость
+                    </Typography>
+                    <Typography variant="h6">{formatMoney(stats.totalCost)}</Typography>
+                  </Stack>
+                </CardContent>
+              </Card>
+              <Card variant="outlined">
+                <CardContent>
+                  <Stack spacing={1}>
+                    <Typography variant="caption" color="text.secondary">
+                      Отправлений в анализе
+                    </Typography>
+                    <Typography variant="h6">{reports.length}</Typography>
+                  </Stack>
+                </CardContent>
+              </Card>
+            </Box>
           </Stack>
         </CardContent>
       </Card>
