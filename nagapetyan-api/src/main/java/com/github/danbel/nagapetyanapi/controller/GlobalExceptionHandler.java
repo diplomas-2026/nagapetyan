@@ -42,6 +42,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ApiErrorResponse handleUnknown(Exception exception) {
+        exception.printStackTrace();
         return new ApiErrorResponse("Внутренняя ошибка сервера", Instant.now());
     }
 
