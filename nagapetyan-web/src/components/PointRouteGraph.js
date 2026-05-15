@@ -1,164 +1,132 @@
-import { Box, ButtonBase, Chip, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
+import ReactECharts from 'echarts-for-react';
 
-function positionNodes(nodes, side) {
-  const centerY = 210;
-  const centerX = side === 'left' ? 170 : 790;
-  const spread = 280;
-  const gap = nodes.length > 1 ? Math.min(88, spread / (nodes.length - 1)) : 0;
-  const startY = centerY - (gap * (nodes.length - 1)) / 2;
-
-  return nodes.map((item, index) => ({
-    ...item,
-    x: centerX,
-    y: startY + index * gap,
-  }));
+function buildNode(item, category, color) {
+  return {
+    id: item.id,
+    name: item.name,
+    value: item.value,
+    category,
+    symbolSize: Math.min(72, 28 + item.value * 4),
+    itemStyle: {
+      color,
+      borderColor: '#ffffff',
+      borderWidth: 2,
+      shadowBlur: 14,
+      shadowColor: 'rgba(15, 23, 42, 0.12)',
+    },
+    label: {
+      show: true,
+      position: 'bottom',
+      color: '#0f172a',
+      fontWeight: 600,
+      formatter: '{b}',
+    },
+  };
 }
 
 export function PointRouteGraph({ centerPoint, incoming = [], outgoing = [], onNodeClick }) {
-  const incomingNodes = positionNodes(incoming, 'left');
-  const outgoingNodes = positionNodes(outgoing, 'right');
-  const width = 960;
-  const height = 420;
-  const center = { x: 480, y: 210 };
+  const nodes = [
+    {
+      id: 'center',
+      name: centerPoint?.name || 'Точка',
+      value: incoming.length + outgoing.length,
+      category: 0,
+      symbolSize: 106,
+      fixed: true,
+      x: 480,
+      y: 220,
+      itemStyle: {
+        color: '#0f172a',
+        borderColor: '#93c5fd',
+        borderWidth: 3,
+      },
+      label: {
+        color: '#0f172a',
+        fontWeight: 800,
+        fontSize: 14,
+      },
+    },
+    ...incoming.map((item) => buildNode(item, 1, '#0f766e')),
+    ...outgoing.map((item) => buildNode(item, 2, '#2563eb')),
+  ];
+
+  const links = [
+    ...incoming.map((item) => ({
+      source: item.id,
+      target: 'center',
+      lineStyle: { color: '#0f766e', width: 2 },
+    })),
+    ...outgoing.map((item) => ({
+      source: 'center',
+      target: item.id,
+      lineStyle: { color: '#2563eb', width: 2 },
+    })),
+  ];
+
+  const option = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'item',
+      formatter: (params) => {
+        if (params.data?.id === 'center') {
+          return `${centerPoint?.name || 'Точка'}<br/>Связей: ${incoming.length + outgoing.length}`;
+        }
+        const direction = params.data?.category === 1 ? 'Прибыло сюда' : 'Отправлено отсюда';
+        return `${direction}<br/>${params.data?.name}<br/>Связей: ${params.data?.value}`;
+      },
+    },
+    series: [
+      {
+        type: 'graph',
+        layout: 'force',
+        roam: true,
+        draggable: true,
+        focusNodeAdjacency: true,
+        data: nodes,
+        links,
+        edgeSymbol: ['none', 'arrow'],
+        edgeSymbolSize: 8,
+        force: {
+          repulsion: 280,
+          edgeLength: 160,
+          gravity: 0.08,
+        },
+        categories: [
+          { name: 'Центр' },
+          { name: 'Прибытие' },
+          { name: 'Отправка' },
+        ],
+      },
+    ],
+  };
 
   return (
-    <Box sx={{ position: 'relative', width: '100%', minHeight: height, borderRadius: 4, overflow: 'hidden', background: 'linear-gradient(135deg, #f8fbff 0%, #eef6ff 100%)' }}>
-      <Box sx={{ position: 'absolute', inset: 0, opacity: 0.85 }}>
-        <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-          <defs>
-            <marker id="arrow-right" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-              <path d="M0,0 L8,4 L0,8 z" fill="#2563eb" />
-            </marker>
-            <marker id="arrow-left" markerWidth="8" markerHeight="8" refX="2" refY="4" orient="auto">
-              <path d="M8,0 L0,4 L8,8 z" fill="#0f766e" />
-            </marker>
-          </defs>
-
-          {incomingNodes.map((item) => (
-            <line
-              key={`line-in-${item.id}`}
-              x1={center.x}
-              y1={center.y}
-              x2={item.x + 110}
-              y2={item.y}
-              stroke="#0f766e"
-              strokeWidth="2"
-              strokeDasharray="6 5"
-              markerEnd="url(#arrow-left)"
-            />
-          ))}
-
-          {outgoingNodes.map((item) => (
-            <line
-              key={`line-out-${item.id}`}
-              x1={center.x}
-              y1={center.y}
-              x2={item.x - 110}
-              y2={item.y}
-              stroke="#2563eb"
-              strokeWidth="2"
-              strokeDasharray="6 5"
-              markerEnd="url(#arrow-right)"
-            />
-          ))}
-
-          <circle cx={center.x} cy={center.y} r="62" fill="#0f172a" opacity="0.92" />
-          <circle cx={center.x} cy={center.y} r="76" fill="none" stroke="#93c5fd" strokeWidth="2" strokeDasharray="8 8" />
-        </svg>
+    <Stack spacing={2}>
+      <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+        <Chip label="Центр" size="small" sx={{ bgcolor: '#e2e8f0' }} />
+        <Chip label="Прибыло сюда" size="small" sx={{ bgcolor: '#ecfeff', color: '#0f766e' }} />
+        <Chip label="Отправлено отсюда" size="small" sx={{ bgcolor: '#eff6ff', color: '#2563eb' }} />
       </Box>
-
-      <ButtonBase
-        disabled
-        sx={{
-          position: 'absolute',
-          left: `${center.x}px`,
-          top: `${center.y}px`,
-          transform: 'translate(-50%, -50%)',
-          width: 180,
-          height: 120,
-          borderRadius: 4,
-          color: '#fff',
-          zIndex: 2,
-          px: 2,
-          textAlign: 'center',
-        }}
-      >
-        <Stack spacing={0.5} alignItems="center" sx={{ width: '100%' }}>
-          <Chip label="Центр" size="small" sx={{ bgcolor: 'rgba(255,255,255,0.14)', color: '#fff' }} />
-          <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.1 }}>
-            {centerPoint?.name || 'Точка'}
-          </Typography>
-          <Typography variant="caption" sx={{ opacity: 0.8 }}>
-            Нажимай на соседние точки
-          </Typography>
-        </Stack>
-      </ButtonBase>
-
-      {incomingNodes.map((item) => (
-        <ButtonBase
-          key={item.id}
-          onClick={() => onNodeClick(item)}
-          sx={{
-            position: 'absolute',
-            left: `${item.x}px`,
-            top: `${item.y}px`,
-            transform: 'translate(-50%, -50%)',
-            width: 220,
-            px: 2,
-            py: 1.5,
-            borderRadius: 4,
-            bgcolor: '#ffffff',
-            boxShadow: '0 12px 30px rgba(15, 23, 42, 0.08)',
-            border: '1px solid',
-            borderColor: 'rgba(15, 118, 110, 0.18)',
-            zIndex: 3,
-            textAlign: 'left',
+      <Box sx={{ width: '100%', height: 460, borderRadius: 4, overflow: 'hidden', bgcolor: '#f8fbff' }}>
+        <ReactECharts
+          option={option}
+          style={{ width: '100%', height: '100%' }}
+          onEvents={{
+            click: (params) => {
+              if (params.data?.id && params.data.id !== 'center') {
+                const clicked = [...incoming, ...outgoing].find((item) => item.id === params.data.id);
+                if (clicked) {
+                  onNodeClick(clicked);
+                }
+              }
+            },
           }}
-        >
-          <Stack spacing={0.4}>
-            <Chip label={`В точку · ${item.value}`} size="small" sx={{ alignSelf: 'flex-start', bgcolor: '#ecfeff', color: '#0f766e' }} />
-            <Typography variant="subtitle2" fontWeight={700} noWrap>
-              {item.name}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Открыть информацию о пункте
-            </Typography>
-          </Stack>
-        </ButtonBase>
-      ))}
-
-      {outgoingNodes.map((item) => (
-        <ButtonBase
-          key={item.id}
-          onClick={() => onNodeClick(item)}
-          sx={{
-            position: 'absolute',
-            left: `${item.x}px`,
-            top: `${item.y}px`,
-            transform: 'translate(-50%, -50%)',
-            width: 220,
-            px: 2,
-            py: 1.5,
-            borderRadius: 4,
-            bgcolor: '#ffffff',
-            boxShadow: '0 12px 30px rgba(15, 23, 42, 0.08)',
-            border: '1px solid',
-            borderColor: 'rgba(37, 99, 235, 0.18)',
-            zIndex: 3,
-            textAlign: 'left',
-          }}
-        >
-          <Stack spacing={0.4}>
-            <Chip label={`Из точки · ${item.value}`} size="small" sx={{ alignSelf: 'flex-start', bgcolor: '#eff6ff', color: '#2563eb' }} />
-            <Typography variant="subtitle2" fontWeight={700} noWrap>
-              {item.name}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Открыть информацию о пункте
-            </Typography>
-          </Stack>
-        </ButtonBase>
-      ))}
-    </Box>
+        />
+      </Box>
+      <Typography variant="caption" color="text.secondary">
+        Граф интерактивный: узлы можно двигать, а по клику открывается карточка точки маршрута.
+      </Typography>
+    </Stack>
   );
 }
