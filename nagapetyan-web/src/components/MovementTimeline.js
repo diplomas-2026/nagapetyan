@@ -64,7 +64,7 @@ function formatDate(value) {
 export function MovementTimeline({ items = [] }) {
   if (!items.length) {
     return (
-      <Stack spacing={1}>
+      <Stack spacing={1.25}>
         <Typography variant="h6">История передвижений</Typography>
         <Typography color="text.secondary">Для этого отправления пока не добавлены этапы движения.</Typography>
       </Stack>
@@ -72,7 +72,7 @@ export function MovementTimeline({ items = [] }) {
   }
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2.25}>
       <Typography variant="h6">История передвижений</Typography>
       <Box sx={{ display: 'grid', gap: 2 }}>
         {items.map((item, index) => {
@@ -125,6 +125,22 @@ export function MovementTimeline({ items = [] }) {
                     {item.description}
                   </Typography>
                 ) : null}
+                <Box
+                  sx={{
+                    mt: 1.25,
+                    px: 1.25,
+                    py: 0.75,
+                    borderRadius: 2,
+                    bgcolor: 'rgba(15, 23, 42, 0.03)',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    display: 'inline-flex',
+                  }}
+                >
+                  <Typography variant="caption" color="text.secondary">
+                    Этап {index + 1}
+                  </Typography>
+                </Box>
               </Box>
 
               <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap', pt: 0.25 }}>
