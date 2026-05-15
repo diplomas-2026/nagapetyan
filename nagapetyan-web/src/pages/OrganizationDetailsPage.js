@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Box, Button, Card, CardContent, Chip, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import { Box, Button, Card, CardContent, Chip, Snackbar, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
+import { ActionHistoryList } from '../components/ActionHistoryList';
 import { ListToolbar } from '../components/ListToolbar';
 import { SectionTabs } from '../components/SectionTabs';
 import { SummaryCards } from '../components/SummaryCards';
@@ -20,14 +22,19 @@ export function OrganizationDetailsPage() {
   const { organizationId } = useParams();
   const { token, user, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
   const { organizations } = useOrganizations(token);
-  const { organization, dashboard, members, reports } = useOrganizationDetails(token, organizationId);
+  const { organization, dashboard, members, reports, reload } = useOrganizationDetails(token, organizationId);
   const [tab, setTab] = useState('overview');
+  const [message, setMessage] = useState(null);
+  const [historyItems, setHistoryItems] = useState([]);
+  const [historyMessage, setHistoryMessage] = useState(null);
   const [memberSearch, setMemberSearch] = useState('');
   const [memberRoleFilter, setMemberRoleFilter] = useState('all');
   const [memberSort, setMemberSort] = useState('name-asc');
   const [reportSearch, setReportSearch] = useState('');
   const [reportStatusFilter, setReportStatusFilter] = useState('all');
   const [reportSort, setReportSort] = useState('date-desc');
+  const currentMember = members.find((item) => String(item.login) === String(user?.login || ''));
+  const isLogisticsLeader = currentMember?.position === 'Руководитель логистики' || user?.position === 'Руководитель логистики';
 
   useEffect(() => {
     if (organizationId) {
@@ -49,6 +56,34 @@ export function OrganizationDetailsPage() {
   function openMemberDetails(memberId) {
     window.location.assign(`/organizations/${organizationId}/members/${memberId}`);
   }
+
+  async function loadHistory() {
+    if (!token || !organizationId || !isLogisticsLeader || !user?.login) {
+      setHistoryItems([]);
+      return;
+    }
+
+    try {
+      const items = await api.getActionHistory(token, organizationId, user.login);
+      setHistoryItems(Array.isArray(items) ? items : []);
+    } catch (error) {
+      setHistoryItems([]);
+      setHistoryMessage(error.message);
+    }
+  }
+
+  useEffect(() => {
+    if (!isLogisticsLeader && tab === 'history') {
+      setTab('overview');
+    }
+  }, [isLogisticsLeader, tab]);
+
+  useEffect(() => {
+    if (tab === 'history') {
+      loadHistory();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, token, organizationId, isLogisticsLeader, user?.login]);
 
   const memberFiltered = useMemo(
     () =>
@@ -158,7 +193,7 @@ export function OrganizationDetailsPage() {
           </Typography>
         </Box>
 
-        <SectionTabs value={tab} onChange={setTab} />
+        <SectionTabs value={tab} onChange={setTab} showHistory={isLogisticsLeader} />
 
         {tab === 'overview' ? (
           <Stack spacing={3}>
@@ -344,7 +379,32 @@ export function OrganizationDetailsPage() {
             </CardContent>
           </Card>
         ) : null}
+
+        {tab === 'history' && isLogisticsLeader ? (
+          <Card>
+            <CardContent>
+              <ActionHistoryList
+                items={historyItems}
+                organizationId={organizationId}
+                currentUserRole={user?.role}
+                onRevert={async (historyId) => {
+                  try {
+                    await api.revertActionHistory(token, organizationId, historyId);
+                    await Promise.all([reload(), loadHistory()]);
+                  } catch (error) {
+                    setHistoryMessage(error.message);
+                    return;
+                  }
+                  setHistoryMessage('Действие откатили');
+                }}
+              />
+            </CardContent>
+          </Card>
+        ) : null}
       </Stack>
+
+      <Snackbar open={Boolean(message)} autoHideDuration={4000} onClose={() => setMessage(null)} message={message || ''} />
+      <Snackbar open={Boolean(historyMessage)} autoHideDuration={4000} onClose={() => setHistoryMessage(null)} message={historyMessage || ''} />
     </AppLayout>
   );
 }

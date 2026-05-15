@@ -11,10 +11,20 @@ const REPORT_STATUS_LABELS = {
   CANCELED: 'Отменено',
 };
 
+const ACTION_TYPE_LABELS = {
+  CREATED: 'Создано',
+  UPDATED: 'Обновлено',
+  DELETED: 'Удалено',
+};
+
 export function getRoleLabel(role) {
   return ROLE_LABELS[role] || role || '-';
 }
 
 export function getReportStatusLabel(status) {
   return REPORT_STATUS_LABELS[status] || status || '-';
+}
+
+export function getActionTypeLabel(actionType) {
+  return ACTION_TYPE_LABELS[actionType] || actionType || '-';
 }

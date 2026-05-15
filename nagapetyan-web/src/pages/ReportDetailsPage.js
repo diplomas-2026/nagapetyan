@@ -68,6 +68,9 @@ export function ReportDetailsPage() {
               <Typography>Фактическая доставка: {report?.deliveredAt || '-'}</Typography>
               <Typography>Подразделение: {report?.responsibleDepartment || '-'}</Typography>
               <Typography>Комментарий: {report?.note || '-'}</Typography>
+              {report?.deletedAt ? (
+                <Typography color="error.main">Отправление удалено и скрыто из списков</Typography>
+              ) : null}
             </Stack>
           </CardContent>
         </Card>

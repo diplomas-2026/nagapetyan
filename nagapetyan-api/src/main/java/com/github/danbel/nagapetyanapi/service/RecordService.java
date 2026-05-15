@@ -22,11 +22,13 @@ public class RecordService {
     private final InMemoryStore store;
     private final AccessService accessService;
     private final MapperService mapperService;
+    private final LogisticsActionHistoryService actionHistoryService;
 
-    public RecordService(InMemoryStore store, AccessService accessService, MapperService mapperService) {
+    public RecordService(InMemoryStore store, AccessService accessService, MapperService mapperService, LogisticsActionHistoryService actionHistoryService) {
         this.store = store;
         this.accessService = accessService;
         this.mapperService = mapperService;
+        this.actionHistoryService = actionHistoryService;
     }
 
     public List<LogisticsRecord> listRecords(ActorContext context, Long organizationId) {
@@ -46,6 +48,7 @@ public class RecordService {
         apply(record, request);
         record = store.saveRecord(record);
         saveDefaultMovements(record);
+        actionHistoryService.recordCreated(context, record);
         return record;
     }
 
@@ -56,8 +59,11 @@ public class RecordService {
         if (record == null || !organizationId.equals(record.getOrganizationId())) {
             throw new ResponseStatusException(NOT_FOUND, "Запись не найдена");
         }
+        LogisticsRecord before = snapshot(record);
         apply(record, request);
-        return store.saveRecord(record);
+        LogisticsRecord updated = store.saveRecord(record);
+        actionHistoryService.recordUpdated(context, before, updated);
+        return updated;
     }
 
     @Transactional
@@ -67,7 +73,9 @@ public class RecordService {
         if (record == null || !organizationId.equals(record.getOrganizationId())) {
             throw new ResponseStatusException(NOT_FOUND, "Запись не найдена");
         }
+        LogisticsRecord before = snapshot(record);
         store.deleteRecord(recordId);
+        actionHistoryService.recordDeleted(context, before);
     }
 
     public List<com.github.danbel.nagapetyanapi.dto.LogisticsRecordResponse> listRecordResponses(ActorContext context, Long organizationId) {
@@ -107,6 +115,26 @@ public class RecordService {
         record.setStatus(request.status());
         record.setResponsibleDepartment(request.responsibleDepartment());
         record.setNote(request.note());
+    }
+
+    private LogisticsRecord snapshot(LogisticsRecord record) {
+        LogisticsRecord copy = new LogisticsRecord();
+        copy.setId(record.getId());
+        copy.setOrganizationId(record.getOrganizationId());
+        copy.setShipmentNumber(record.getShipmentNumber());
+        copy.setRouteFrom(record.getRouteFrom());
+        copy.setRouteTo(record.getRouteTo());
+        copy.setShippedAt(record.getShippedAt());
+        copy.setPlannedDeliveryDate(record.getPlannedDeliveryDate());
+        copy.setWeight(record.getWeight());
+        copy.setCost(record.getCost());
+        copy.setDeliveredAt(record.getDeliveredAt());
+        copy.setStatus(record.getStatus());
+        copy.setResponsibleDepartment(record.getResponsibleDepartment());
+        copy.setNote(record.getNote());
+        copy.setCreatedAt(record.getCreatedAt());
+        copy.setDeletedAt(record.getDeletedAt());
+        return copy;
     }
 
     private void saveDefaultMovements(LogisticsRecord record) {

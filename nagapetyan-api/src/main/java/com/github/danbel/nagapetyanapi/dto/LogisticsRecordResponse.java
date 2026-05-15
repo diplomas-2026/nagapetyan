@@ -22,6 +22,7 @@ public record LogisticsRecordResponse(
         String responsibleDepartment,
         String note,
         Instant createdAt,
+        Instant deletedAt,
         long transitDays,
         boolean delayed,
         List<LogisticsRecordMovementResponse> movements

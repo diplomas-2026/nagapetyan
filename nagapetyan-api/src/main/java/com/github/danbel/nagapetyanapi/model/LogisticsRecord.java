@@ -46,6 +46,8 @@ public class LogisticsRecord {
     private String note;
     @Column(name = "created_at")
     private Instant createdAt;
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
 
     public Long getId() {
         return id;
@@ -157,5 +159,13 @@ public class LogisticsRecord {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Instant getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(Instant deletedAt) {
+        this.deletedAt = deletedAt;
     }
 }

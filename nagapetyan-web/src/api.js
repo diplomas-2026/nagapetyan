@@ -54,6 +54,12 @@ export const api = {
   createReport: (token, organizationId, body) => request(`/organizations/${organizationId}/reports`, { method: 'POST', token, body }),
   updateReport: (token, organizationId, reportId, body) => request(`/organizations/${organizationId}/reports/${reportId}`, { method: 'PUT', token, body }),
   deleteReport: (token, organizationId, reportId) => request(`/organizations/${organizationId}/reports/${reportId}`, { method: 'DELETE', token }),
+  getActionHistory: (token, organizationId, actorLogin) => {
+    const query = actorLogin ? `?actorLogin=${encodeURIComponent(actorLogin)}` : '';
+    return request(`/organizations/${organizationId}/actions${query}`, { token });
+  },
+  revertActionHistory: (token, organizationId, historyId) =>
+    request(`/organizations/${organizationId}/actions/${historyId}/revert`, { method: 'POST', token }),
   importReports: (token, organizationId, file) => {
     const formData = new FormData();
     formData.append('file', file);

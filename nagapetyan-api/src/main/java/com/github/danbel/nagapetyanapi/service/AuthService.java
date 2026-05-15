@@ -43,12 +43,13 @@ public class AuthService {
                 account.login(),
                 account.fullName()));
 
+        OrganizationMember member = store.findMemberByLogin(account.login());
         AuthUserResponse user = new AuthUserResponse(
-                null,
+                member == null ? null : member.getId(),
                 account.login(),
                 account.fullName(),
                 null,
-                null,
+                account.position(),
                 account.role(),
                 account.organizationId(),
                 null);
@@ -67,7 +68,7 @@ public class AuthService {
         if (session == null) {
             throw new ResponseStatusException(UNAUTHORIZED, "Сессия не найдена");
         }
-        return new ActorContext(session.role(), session.organizationId());
+        return new ActorContext(session.role(), session.organizationId(), session.login(), session.fullName());
     }
 
     public String hashPassword(String password) {

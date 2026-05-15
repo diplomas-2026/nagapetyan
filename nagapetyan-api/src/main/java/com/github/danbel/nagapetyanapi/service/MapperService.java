@@ -4,10 +4,12 @@ import com.github.danbel.nagapetyanapi.dto.DashboardResponse;
 import com.github.danbel.nagapetyanapi.dto.AuthUserResponse;
 import com.github.danbel.nagapetyanapi.dto.LogisticsRecordMovementResponse;
 import com.github.danbel.nagapetyanapi.dto.LogisticsRecordResponse;
+import com.github.danbel.nagapetyanapi.dto.LogisticsActionHistoryResponse;
 import com.github.danbel.nagapetyanapi.dto.MemberResponse;
 import com.github.danbel.nagapetyanapi.dto.OrganizationResponse;
 import com.github.danbel.nagapetyanapi.model.LogisticsRecord;
 import com.github.danbel.nagapetyanapi.model.LogisticsRecordMovement;
+import com.github.danbel.nagapetyanapi.model.LogisticsActionHistory;
 import com.github.danbel.nagapetyanapi.model.Organization;
 import com.github.danbel.nagapetyanapi.model.OrganizationMember;
 
@@ -66,7 +68,7 @@ public class MapperService {
                 account.login(),
                 account.fullName(),
                 null,
-                null,
+                account.position(),
                 account.role(),
                 account.organizationId(),
                 null
@@ -100,11 +102,28 @@ public class MapperService {
                 record.getResponsibleDepartment(),
                 record.getNote(),
                 record.getCreatedAt(),
+                record.getDeletedAt(),
                 transitDays,
                 delayed,
                 movements.stream()
                         .map(this::toMovementResponse)
                         .toList()
+        );
+    }
+
+    public LogisticsActionHistoryResponse toActionHistoryResponse(LogisticsActionHistory history) {
+        return new LogisticsActionHistoryResponse(
+                history.getId(),
+                history.getOrganizationId(),
+                history.getActorLogin(),
+                history.getActorFullName(),
+                history.getActionType(),
+                history.getRecordId(),
+                history.getRecordShipmentNumber(),
+                history.getSummary(),
+                history.isReverted(),
+                !history.isReverted(),
+                history.getCreatedAt()
         );
     }
 
