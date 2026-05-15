@@ -1,5 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Box, Button, Card, CardContent, Chip, Snackbar, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Snackbar,
+  Stack,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  Typography,
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
@@ -8,7 +24,7 @@ import { AppLayout } from '../components/AppLayout';
 import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
 import { formatMoney, formatWeight } from '../utils/formatters';
-import { getReportStatusLabel } from '../utils/labels';
+import { getMovementTypeLabel, getReportStatusLabel } from '../utils/labels';
 import { buildPointUrl, formatCoordinate } from '../utils/points';
 
 function getStatusTone(report) {
@@ -34,6 +50,7 @@ export function ReportDetailsPage() {
   const { organizations } = useOrganizations(token);
   const [report, setReport] = useState(null);
   const [message, setMessage] = useState(null);
+  const canManageMovements = user?.role !== 'EMPLOYEE';
 
   useEffect(() => {
     if (organizationId) {
@@ -57,6 +74,20 @@ export function ReportDetailsPage() {
   function openPoint(url) {
     window.location.assign(url);
   }
+
+  async function handleDeleteMovement(movementId) {
+    if (!window.confirm('Удалить этап передвижения?')) {
+      return;
+    }
+
+    try {
+      await api.deleteMovement(token, organizationId, reportId, movementId);
+      window.location.assign(`/organizations/${organizationId}/reports/${reportId}`);
+    } catch (error) {
+      setMessage(error.message);
+    }
+  }
+
   const infoCards = useMemo(
     () => [
       { label: 'Номер', value: report?.shipmentNumber || '-' },
@@ -240,6 +271,82 @@ export function ReportDetailsPage() {
                   <strong>Комментарий:</strong> {report?.note || '-'}
                 </Typography>
               </Stack>
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Card variant="outlined">
+          <CardContent>
+            <Stack spacing={2}>
+              <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" useFlexGap>
+                <Stack spacing={0.5}>
+                  <Typography variant="h6">Этапы передвижения</Typography>
+                  <Typography color="text.secondary">Управление историей движения отправления.</Typography>
+                </Stack>
+                {canManageMovements ? (
+                  <Button
+                    component={Link}
+                    to={`/organizations/${organizationId}/reports/${reportId}/movements/new`}
+                    reloadDocument
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                  >
+                    Добавить этап
+                  </Button>
+                ) : null}
+              </Stack>
+
+              {report?.movements?.length ? (
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell width={88}>№</TableCell>
+                      <TableCell>Тип</TableCell>
+                      <TableCell>Заголовок</TableCell>
+                      <TableCell>Локация</TableCell>
+                      <TableCell width={130}>Дата</TableCell>
+                      {canManageMovements ? <TableCell align="right">Действия</TableCell> : null}
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {report.movements.map((item) => (
+                      <TableRow key={item.id} hover>
+                        <TableCell>{item.sortOrder}</TableCell>
+                        <TableCell>{getMovementTypeLabel(item.movementType)}</TableCell>
+                        <TableCell>{item.title}</TableCell>
+                        <TableCell>{item.location || '-'}</TableCell>
+                        <TableCell>{item.eventDate || '-'}</TableCell>
+                        {canManageMovements ? (
+                          <TableCell align="right">
+                            <Stack direction="row" spacing={1} justifyContent="flex-end">
+                              <Button
+                                component={Link}
+                                to={`/organizations/${organizationId}/reports/${reportId}/movements/${item.id}/edit`}
+                                reloadDocument
+                                size="small"
+                                variant="outlined"
+                              >
+                                Изменить
+                              </Button>
+                              <Button
+                                onClick={() => handleDeleteMovement(item.id)}
+                                size="small"
+                                color="error"
+                                variant="outlined"
+                                startIcon={<DeleteIcon />}
+                              >
+                                Удалить
+                              </Button>
+                            </Stack>
+                          </TableCell>
+                        ) : null}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <Typography color="text.secondary">Пока не добавлено ни одного этапа движения.</Typography>
+              )}
             </Stack>
           </CardContent>
         </Card>

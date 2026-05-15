@@ -54,6 +54,14 @@ export const api = {
   createReport: (token, organizationId, body) => request(`/organizations/${organizationId}/reports`, { method: 'POST', token, body }),
   updateReport: (token, organizationId, reportId, body) => request(`/organizations/${organizationId}/reports/${reportId}`, { method: 'PUT', token, body }),
   deleteReport: (token, organizationId, reportId) => request(`/organizations/${organizationId}/reports/${reportId}`, { method: 'DELETE', token }),
+  getMovements: (token, organizationId, reportId) => request(`/organizations/${organizationId}/reports/${reportId}/movements`, { token }),
+  getMovement: (token, organizationId, reportId, movementId) => request(`/organizations/${organizationId}/reports/${reportId}/movements/${movementId}`, { token }),
+  createMovement: (token, organizationId, reportId, body) =>
+    request(`/organizations/${organizationId}/reports/${reportId}/movements`, { method: 'POST', token, body }),
+  updateMovement: (token, organizationId, reportId, movementId, body) =>
+    request(`/organizations/${organizationId}/reports/${reportId}/movements/${movementId}`, { method: 'PUT', token, body }),
+  deleteMovement: (token, organizationId, reportId, movementId) =>
+    request(`/organizations/${organizationId}/reports/${reportId}/movements/${movementId}`, { method: 'DELETE', token }),
   getActionHistory: (token, organizationId, actorLogin) => {
     const query = actorLogin ? `?actorLogin=${encodeURIComponent(actorLogin)}` : '';
     return request(`/organizations/${organizationId}/actions${query}`, { token });

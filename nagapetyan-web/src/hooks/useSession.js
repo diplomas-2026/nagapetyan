@@ -38,10 +38,16 @@ export function SessionProvider({ children }) {
         });
       },
       setOrganizationId(nextOrganizationId) {
-        setSession((current) => ({
-          ...current,
-          selectedOrganizationId: nextOrganizationId ? String(nextOrganizationId) : '',
-        }));
+        setSession((current) => {
+          const normalized = nextOrganizationId ? String(nextOrganizationId) : '';
+          if ((current.selectedOrganizationId || '') === normalized) {
+            return current;
+          }
+          return {
+            ...current,
+            selectedOrganizationId: normalized,
+          };
+        });
       },
       clearSession() {
         setSession({ token: '', user: null, selectedOrganizationId: '' });

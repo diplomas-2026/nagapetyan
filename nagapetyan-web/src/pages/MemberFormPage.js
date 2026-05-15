@@ -24,7 +24,7 @@ export function MemberFormPage({ mode }) {
   const initialRole = new URLSearchParams(location.search).get('role') || 'EMPLOYEE';
   const { token, user, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
   const { organizations } = useOrganizations(token);
-  const [form, setForm] = useState({ ...emptyMember, role: initialRole });
+  const [form, setForm] = useState(() => ({ ...emptyMember, role: initialRole }));
   const [message, setMessage] = useState(null);
 
   useEffect(() => {
@@ -52,8 +52,6 @@ export function MemberFormPage({ mode }) {
           role: data.role || 'EMPLOYEE',
         });
       }).catch((error) => setMessage(error.message));
-    } else {
-      setForm((current) => ({ ...current, role: initialRole }));
     }
   }, [initialRole, isEdit, memberId, organizationId, token]);
 

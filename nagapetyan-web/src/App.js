@@ -10,6 +10,7 @@ import { MemberFormPage } from './pages/MemberFormPage';
 import { ReportDetailsPage } from './pages/ReportDetailsPage';
 import { ReportFormPage } from './pages/ReportFormPage';
 import { ReportImportPage } from './pages/ReportImportPage';
+import { MovementFormPage } from './pages/MovementFormPage';
 import { SessionProvider, useSession } from './hooks/useSession';
 
 function RequireAuth({ children }) {
@@ -154,6 +155,22 @@ function AppRoutes() {
         element={
           <RequireAuth>
             <ReportFormPage mode="edit" />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/organizations/:organizationId/reports/:reportId/movements/new"
+        element={
+          <RequireAuth>
+            <MovementFormPage mode="create" />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/organizations/:organizationId/reports/:reportId/movements/:movementId/edit"
+        element={
+          <RequireAuth>
+            <MovementFormPage mode="edit" />
           </RequireAuth>
         }
       />

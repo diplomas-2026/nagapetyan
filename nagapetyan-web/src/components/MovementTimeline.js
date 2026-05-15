@@ -1,10 +1,11 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, Chip, Stack, Typography } from '@mui/material';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
 import WarehouseOutlinedIcon from '@mui/icons-material/WarehouseOutlined';
 import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import RouteOutlinedIcon from '@mui/icons-material/RouteOutlined';
+import { getMovementTypeLabel } from '../utils/labels';
 
 const TYPE_META = {
   CREATED: {
@@ -115,6 +116,11 @@ export function MovementTimeline({ items = [] }) {
                 <Typography variant="subtitle1" fontWeight={700}>
                   {item.title}
                 </Typography>
+                <Chip
+                  label={getMovementTypeLabel(item.movementType)}
+                  size="small"
+                  sx={{ mt: 0.75, mb: 0.5, bgcolor: 'rgba(15, 23, 42, 0.05)' }}
+                />
                 {item.location ? (
                   <Typography variant="body2" color="text.secondary">
                     {item.location}

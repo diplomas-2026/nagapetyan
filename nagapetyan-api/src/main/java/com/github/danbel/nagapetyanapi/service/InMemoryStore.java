@@ -69,6 +69,10 @@ public class InMemoryStore {
         return movementRepository.save(movement);
     }
 
+    public LogisticsRecordMovement getMovement(Long id) {
+        return movementRepository.findById(id).orElse(null);
+    }
+
     public List<Organization> getOrganizations() {
         return organizationRepository.findAllByOrderByIdAsc();
     }
@@ -188,6 +192,10 @@ public class InMemoryStore {
 
     public List<LogisticsRecordMovement> getMovementsByRecordId(Long recordId) {
         return movementRepository.findByRecordIdOrderBySortOrderAsc(recordId);
+    }
+
+    public void deleteMovement(Long id) {
+        movementRepository.deleteById(id);
     }
 
     public LogisticsActionHistory saveActionHistory(LogisticsActionHistory history) {
