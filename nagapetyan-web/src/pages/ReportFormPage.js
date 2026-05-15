@@ -113,7 +113,7 @@ export function ReportFormPage({ mode }) {
         return;
       }
       const created = await api.createReport(token, organizationId, preparePayload());
-      window.location.assign(`/organizations/${organizationId}/reports/${created.id}`);
+      window.location.assign(`/organizations/${organizationId}?tab=reports`);
     } catch (error) {
       setMessage(error.message);
     } finally {

@@ -4,7 +4,7 @@ import AddIcon from '@mui/icons-material/Add';
 import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
 import { OrganizationAnalyticsPanel } from '../components/OrganizationAnalyticsPanel';
@@ -27,11 +27,15 @@ function normalizeText(value) {
 
 export function OrganizationDetailsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { organizationId } = useParams();
   const { token, user, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
   const { organizations } = useOrganizations(token);
   const { organization, dashboard, members, reports, loading, reload } = useOrganizationDetails(token, organizationId);
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useState(() => {
+    const initialTab = new URLSearchParams(location.search).get('tab');
+    return ['overview', 'graph', 'analytics', 'members', 'reports', 'history'].includes(initialTab) ? initialTab : 'overview';
+  });
   const [message, setMessage] = useState(null);
   const [historyItems, setHistoryItems] = useState([]);
   const [historyMessage, setHistoryMessage] = useState(null);
@@ -60,6 +64,13 @@ export function OrganizationDetailsPage() {
 
   function handleTabChange(nextTab) {
     setTab(nextTab);
+    const url = new URL(window.location.href);
+    if (nextTab === 'overview') {
+      url.searchParams.delete('tab');
+    } else {
+      url.searchParams.set('tab', nextTab);
+    }
+    window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
   }
 
   function openReportDetails(reportId) {
