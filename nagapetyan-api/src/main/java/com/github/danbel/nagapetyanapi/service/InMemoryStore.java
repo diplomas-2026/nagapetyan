@@ -54,6 +54,9 @@ public class InMemoryStore {
     }
 
     public Organization saveOrganization(Organization organization) {
+        if (organization.getCreatedAt() == null) {
+            organization.setCreatedAt(Instant.now());
+        }
         return organizationRepository.save(organization);
     }
 
