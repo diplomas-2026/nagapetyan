@@ -55,6 +55,7 @@ export function ReportImportPage() {
       organizationId={sessionOrganizationId}
       organizations={organizations}
       onOrganizationChange={handleOrganizationChange}
+      loading={loading}
       onLogout={() => {
         clearSession();
         navigate('/login');
@@ -87,7 +88,7 @@ export function ReportImportPage() {
             <Typography>{file ? `Выбран файл: ${file.name}` : 'Файл не выбран'}</Typography>
             <Stack direction="row" spacing={2} flexWrap="wrap">
               <Button variant="contained" onClick={upload} disabled={loading}>
-                Загрузить отчет
+                {loading ? 'Загрузка...' : 'Загрузить отчет'}
               </Button>
               <Button component={Link} to={`/organizations/${organizationId}`} reloadDocument variant="outlined">
                 Отмена

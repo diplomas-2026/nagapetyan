@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, CardContent, FormControl, InputLabel, MenuItem, Select, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { Button, Card, CardContent, CircularProgress, FormControl, InputLabel, MenuItem, Select, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
@@ -26,6 +26,8 @@ export function MemberFormPage({ mode }) {
   const { organizations } = useOrganizations(token);
   const [form, setForm] = useState(() => ({ ...emptyMember, role: initialRole }));
   const [message, setMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (organizationId) {
@@ -42,21 +44,42 @@ export function MemberFormPage({ mode }) {
 
   useEffect(() => {
     if (isEdit) {
-      api.getMember(token, organizationId, memberId).then((data) => {
-        setForm({
-          login: data.login || '',
-          password: '',
-          fullName: data.fullName || '',
-          email: data.email || '',
-          position: data.position || '',
-          role: data.role || 'EMPLOYEE',
+      let cancelled = false;
+      setLoading(true);
+      api.getMember(token, organizationId, memberId)
+        .then((data) => {
+          if (cancelled) {
+            return;
+          }
+          setForm({
+            login: data.login || '',
+            password: '',
+            fullName: data.fullName || '',
+            email: data.email || '',
+            position: data.position || '',
+            role: data.role || 'EMPLOYEE',
+          });
+        })
+        .catch((error) => {
+          if (!cancelled) {
+            setMessage(error.message);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
         });
-      }).catch((error) => setMessage(error.message));
+
+      return () => {
+        cancelled = true;
+      };
     }
   }, [initialRole, isEdit, memberId, organizationId, token]);
 
   async function save() {
     try {
+      setSaving(true);
       if (isEdit) {
         await api.updateMember(token, organizationId, memberId, form);
         window.location.assign(`/organizations/${organizationId}/members/${memberId}`);
@@ -66,6 +89,8 @@ export function MemberFormPage({ mode }) {
       window.location.assign(`/organizations/${organizationId}/members/${created.id}`);
     } catch (error) {
       setMessage(error.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -77,6 +102,7 @@ export function MemberFormPage({ mode }) {
       organizationId={sessionOrganizationId}
       organizations={organizations}
       onOrganizationChange={handleOrganizationChange}
+      loading={loading || saving}
       onLogout={() => {
         clearSession();
         navigate('/login');
@@ -84,6 +110,11 @@ export function MemberFormPage({ mode }) {
     >
       <Card>
         <CardContent>
+          {loading ? (
+            <Stack alignItems="center" justifyContent="center" sx={{ py: 8 }}>
+              <CircularProgress />
+            </Stack>
+          ) : (
           <Stack spacing={3}>
             <Typography variant="h4">{isEdit ? 'Редактирование сотрудника' : 'Новый сотрудник'}</Typography>
             <TextField label="Логин" value={form.login} onChange={(event) => setForm({ ...form, login: event.target.value })} fullWidth />
@@ -106,14 +137,15 @@ export function MemberFormPage({ mode }) {
               </Select>
             </FormControl>
             <Stack direction="row" spacing={2} flexWrap="wrap">
-              <Button variant="contained" onClick={save}>
-                Сохранить
+              <Button variant="contained" onClick={save} disabled={loading || saving}>
+                {saving ? <CircularProgress size={18} color="inherit" /> : 'Сохранить'}
               </Button>
               <Button component={Link} to={`/organizations/${organizationId}`} reloadDocument variant="outlined">
                 Отмена
               </Button>
             </Stack>
           </Stack>
+          )}
         </CardContent>
       </Card>
       <Snackbar open={Boolean(message)} autoHideDuration={4000} onClose={() => setMessage(null)} message={message || ''} />

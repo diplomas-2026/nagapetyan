@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Box, Button, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import { Box, Button, CircularProgress, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import BusinessIcon from '@mui/icons-material/Business';
 import { AppLayout } from '../components/AppLayout';
@@ -12,7 +12,7 @@ import { matchesSearch } from '../utils/listFilters';
 export function OrganizationsPage() {
   const navigate = useNavigate();
   const { token, user, organizationId, setOrganizationId, clearSession } = useSession();
-  const { organizations } = useOrganizations(token);
+  const { organizations, loading } = useOrganizations(token);
   const canEditOrganizations = user?.role === 'SYSTEM_ADMIN';
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('name-asc');
@@ -67,6 +67,7 @@ export function OrganizationsPage() {
         clearSession();
         navigate('/login');
       }}
+      loading={loading}
       actions={canEditOrganizations ? <Button startIcon={<AddIcon />} component={Link} to="/organizations/new" reloadDocument variant="contained">Добавить организацию</Button> : null}
     >
       <Stack spacing={2}>
@@ -144,7 +145,7 @@ export function OrganizationsPage() {
             ) : (
               <TableRow>
                 <TableCell colSpan={6} align="center">
-                  Ничего не найдено
+                  {loading ? <CircularProgress size={24} /> : 'Ничего не найдено'}
                 </TableCell>
               </TableRow>
             )}

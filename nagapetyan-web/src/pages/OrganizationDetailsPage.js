@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Box, Button, Card, CardContent, Chip, Snackbar, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
+import { Box, Button, Card, CardContent, Chip, CircularProgress, Snackbar, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
@@ -30,7 +30,7 @@ export function OrganizationDetailsPage() {
   const { organizationId } = useParams();
   const { token, user, organizationId: sessionOrganizationId, setOrganizationId, clearSession } = useSession();
   const { organizations } = useOrganizations(token);
-  const { organization, dashboard, members, reports, reload } = useOrganizationDetails(token, organizationId);
+  const { organization, dashboard, members, reports, loading, reload } = useOrganizationDetails(token, organizationId);
   const [tab, setTab] = useState('overview');
   const [message, setMessage] = useState(null);
   const [historyItems, setHistoryItems] = useState([]);
@@ -258,6 +258,7 @@ export function OrganizationDetailsPage() {
       organizationId={sessionOrganizationId}
       organizations={organizations}
       onOrganizationChange={handleOrganizationChange}
+      loading={loading && !organization}
       onLogout={() => {
         clearSession();
         navigate('/login');
@@ -305,6 +306,13 @@ export function OrganizationDetailsPage() {
       }
     >
       <Stack spacing={3}>
+        {loading && !organization ? (
+          <Stack alignItems="center" justifyContent="center" sx={{ py: 10 }}>
+            <CircularProgress />
+          </Stack>
+        ) : null}
+        {!loading || organization ? (
+          <>
         <Box>
           <Typography variant="h4" gutterBottom>
             {organization?.name || 'Организация'}
@@ -537,6 +545,8 @@ export function OrganizationDetailsPage() {
               />
             </CardContent>
           </Card>
+        ) : null}
+          </>
         ) : null}
       </Stack>
 

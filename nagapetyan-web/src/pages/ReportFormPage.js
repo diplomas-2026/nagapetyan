@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, CardContent, FormControl, InputLabel, MenuItem, Select, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { Button, Card, CardContent, CircularProgress, FormControl, InputLabel, MenuItem, Select, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
@@ -32,6 +32,8 @@ export function ReportFormPage({ mode }) {
   const { organizations } = useOrganizations(token);
   const [form, setForm] = useState(emptyReport);
   const [message, setMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (organizationId) {
@@ -48,8 +50,13 @@ export function ReportFormPage({ mode }) {
 
   useEffect(() => {
     if (isEdit) {
+      let cancelled = false;
+      setLoading(true);
       api.getReport(token, organizationId, reportId)
-        .then((data) =>
+        .then((data) => {
+          if (cancelled) {
+            return;
+          }
           setForm({
             shipmentNumber: data.shipmentNumber || '',
             routeFrom: data.routeFrom || '',
@@ -66,9 +73,22 @@ export function ReportFormPage({ mode }) {
             status: data.status || 'IN_TRANSIT',
             responsibleDepartment: data.responsibleDepartment || '',
             note: data.note || '',
-          }),
-        )
-        .catch((error) => setMessage(error.message));
+          });
+        })
+        .catch((error) => {
+          if (!cancelled) {
+            setMessage(error.message);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        });
+
+      return () => {
+        cancelled = true;
+      };
     }
   }, [isEdit, organizationId, reportId, token]);
 
@@ -86,6 +106,7 @@ export function ReportFormPage({ mode }) {
 
   async function save() {
     try {
+      setSaving(true);
       if (isEdit) {
         await api.updateReport(token, organizationId, reportId, preparePayload());
         window.location.assign(`/organizations/${organizationId}/reports/${reportId}`);
@@ -95,6 +116,8 @@ export function ReportFormPage({ mode }) {
       window.location.assign(`/organizations/${organizationId}/reports/${created.id}`);
     } catch (error) {
       setMessage(error.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -106,6 +129,7 @@ export function ReportFormPage({ mode }) {
       organizationId={sessionOrganizationId}
       organizations={organizations}
       onOrganizationChange={handleOrganizationChange}
+      loading={loading || saving}
       onLogout={() => {
         clearSession();
         navigate('/login');
@@ -113,6 +137,11 @@ export function ReportFormPage({ mode }) {
     >
       <Card>
         <CardContent>
+          {loading ? (
+            <Stack alignItems="center" justifyContent="center" sx={{ py: 8 }}>
+              <CircularProgress />
+            </Stack>
+          ) : (
           <Stack spacing={3}>
             <Typography variant="h4">{isEdit ? 'Редактирование отправления' : 'Новое отправление'}</Typography>
             <TextField label="Номер отправления" value={form.shipmentNumber} onChange={(event) => setForm({ ...form, shipmentNumber: event.target.value })} fullWidth />
@@ -187,14 +216,15 @@ export function ReportFormPage({ mode }) {
             <TextField label="Ответственное подразделение" value={form.responsibleDepartment} onChange={(event) => setForm({ ...form, responsibleDepartment: event.target.value })} fullWidth />
             <TextField label="Комментарий" value={form.note} onChange={(event) => setForm({ ...form, note: event.target.value })} fullWidth multiline minRows={3} />
             <Stack direction="row" spacing={2} flexWrap="wrap">
-              <Button variant="contained" onClick={save}>
-                Сохранить
+              <Button variant="contained" onClick={save} disabled={loading || saving}>
+                {saving ? <CircularProgress size={18} color="inherit" /> : 'Сохранить'}
               </Button>
               <Button component={Link} to={`/organizations/${organizationId}`} reloadDocument variant="outlined">
                 Отмена
               </Button>
             </Stack>
           </Stack>
+          )}
         </CardContent>
       </Card>
       <Snackbar open={Boolean(message)} autoHideDuration={4000} onClose={() => setMessage(null)} message={message || ''} />

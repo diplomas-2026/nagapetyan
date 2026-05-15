@@ -1,4 +1,4 @@
-import { Autocomplete, AppBar, Box, Button, Chip, Paper, Stack, TextField, Toolbar, Typography } from '@mui/material';
+import { Autocomplete, AppBar, Box, Button, Chip, LinearProgress, Paper, Stack, TextField, Toolbar, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { getRoleLabel } from '../utils/labels';
 
@@ -11,6 +11,7 @@ export function AppLayout({
   onOrganizationChange,
   onLogout,
   actions,
+  loading = false,
   children,
 }) {
   return (
@@ -57,6 +58,7 @@ export function AppLayout({
           {actions}
         </Toolbar>
       </AppBar>
+      {loading ? <LinearProgress /> : null}
 
       <Box sx={{ p: { xs: 2, md: 4 } }}>
         <Paper sx={{ p: { xs: 3, md: 4 }, mb: 3, background: 'linear-gradient(135deg, #ffffff 0%, #eef4ff 100%)' }}>

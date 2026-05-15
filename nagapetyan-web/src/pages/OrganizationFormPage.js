@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Autocomplete, Button, Card, CardContent, Divider, FormControlLabel, Radio, RadioGroup, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { Autocomplete, Button, Card, CardContent, CircularProgress, Divider, FormControlLabel, Radio, RadioGroup, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
@@ -31,6 +31,8 @@ export function OrganizationFormPage({ mode }) {
   const { organizations } = useOrganizations(token);
   const [owners, setOwners] = useState([]);
   const [ownersLoading, setOwnersLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState(null);
 
@@ -49,15 +51,35 @@ export function OrganizationFormPage({ mode }) {
 
   useEffect(() => {
     if (isEdit && targetId) {
-      api.getOrganization(token, targetId).then((data) => {
-        setForm((current) => ({
-          ...current,
-          name: data.name || '',
-          inn: data.inn || '',
-          region: data.region || '',
-          description: data.description || '',
-        }));
-      }).catch((error) => setMessage(error.message));
+      let cancelled = false;
+      setLoading(true);
+      api.getOrganization(token, targetId)
+        .then((data) => {
+          if (cancelled) {
+            return;
+          }
+          setForm((current) => ({
+            ...current,
+            name: data.name || '',
+            inn: data.inn || '',
+            region: data.region || '',
+            description: data.description || '',
+          }));
+        })
+        .catch((error) => {
+          if (!cancelled) {
+            setMessage(error.message);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setLoading(false);
+          }
+        });
+
+      return () => {
+        cancelled = true;
+      };
     }
   }, [isEdit, targetId, token]);
 
@@ -96,6 +118,7 @@ export function OrganizationFormPage({ mode }) {
 
   async function save() {
     try {
+      setSaving(true);
       if (isEdit) {
         const updated = await api.updateOrganization(token, targetId, {
           name: form.name,
@@ -119,6 +142,8 @@ export function OrganizationFormPage({ mode }) {
       }
     } catch (error) {
       setMessage(error.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -130,6 +155,7 @@ export function OrganizationFormPage({ mode }) {
       organizationId={organizationId}
       organizations={organizations}
       onOrganizationChange={handleOrganizationChange}
+      loading={loading || ownersLoading || saving}
       onLogout={() => {
         clearSession();
         navigate('/login');
@@ -137,6 +163,11 @@ export function OrganizationFormPage({ mode }) {
     >
       <Card>
         <CardContent>
+          {loading && isEdit ? (
+            <Stack alignItems="center" justifyContent="center" sx={{ py: 8 }}>
+              <CircularProgress />
+            </Stack>
+          ) : (
           <Stack spacing={3}>
             <Typography variant="h4">{isEdit ? 'Редактирование организации' : 'Новая организация'}</Typography>
             <TextField label="Название" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} fullWidth />
@@ -223,14 +254,15 @@ export function OrganizationFormPage({ mode }) {
             ) : null}
 
             <Stack direction="row" spacing={2} flexWrap="wrap">
-              <Button variant="contained" onClick={save}>
-                Сохранить
+              <Button variant="contained" onClick={save} disabled={loading || ownersLoading || saving}>
+                {saving ? <CircularProgress size={18} color="inherit" /> : 'Сохранить'}
               </Button>
               <Button component={Link} to={isEdit ? `/organizations/${targetId}` : '/organizations'} reloadDocument variant="outlined">
                 Отмена
               </Button>
             </Stack>
           </Stack>
+          )}
         </CardContent>
       </Card>
       <Snackbar open={Boolean(message)} autoHideDuration={4000} onClose={() => setMessage(null)} message={message || ''} />
