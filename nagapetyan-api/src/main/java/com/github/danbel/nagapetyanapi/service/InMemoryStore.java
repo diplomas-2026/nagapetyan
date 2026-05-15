@@ -97,6 +97,10 @@ public class InMemoryStore {
         return memberRepository.findByOrganizationIdOrderByIdAsc(organizationId);
     }
 
+    public List<OrganizationMember> getOwners() {
+        return memberRepository.findByRoleOrderByIdAsc(ActorRole.OWNER);
+    }
+
     public OrganizationMember getMember(Long id) {
         return memberRepository.findById(id).orElse(null);
     }

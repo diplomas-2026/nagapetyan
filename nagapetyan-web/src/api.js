@@ -68,6 +68,7 @@ export const api = {
   deleteOrganization: (token, organizationId) => request(`/organizations/${organizationId}`, { method: 'DELETE', token }),
   getDashboard: (token, organizationId) => request(`/organizations/${organizationId}/dashboard`, { token }),
   getMembers: (token, organizationId) => request(`/organizations/${organizationId}/members`, { token }),
+  getOwners: (token) => request('/owners', { token }),
   getMember: (token, organizationId, memberId) => request(`/organizations/${organizationId}/members/${memberId}`, { token }),
   createMember: (token, organizationId, body) => request(`/organizations/${organizationId}/members`, { method: 'POST', token, body }),
   updateMember: (token, organizationId, memberId, body) => request(`/organizations/${organizationId}/members/${memberId}`, { method: 'PUT', token, body }),

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, CardContent, Divider, FormControlLabel, Radio, RadioGroup, Snackbar, Stack, TextField, Typography } from '@mui/material';
+import { Autocomplete, Button, Card, CardContent, Divider, FormControlLabel, Radio, RadioGroup, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
@@ -29,6 +29,8 @@ export function OrganizationFormPage({ mode }) {
   const isEdit = mode === 'edit';
   const { token, user, organizationId, setOrganizationId, clearSession } = useSession();
   const { organizations } = useOrganizations(token);
+  const [owners, setOwners] = useState([]);
+  const [ownersLoading, setOwnersLoading] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [message, setMessage] = useState(null);
 
@@ -58,6 +60,39 @@ export function OrganizationFormPage({ mode }) {
       }).catch((error) => setMessage(error.message));
     }
   }, [isEdit, targetId, token]);
+
+  useEffect(() => {
+    if (isEdit || !token) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadOwners() {
+      try {
+        setOwnersLoading(true);
+        const data = await api.getOwners(token);
+        if (!cancelled) {
+          setOwners(Array.isArray(data) ? data : []);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setOwners([]);
+          setMessage(error.message);
+        }
+      } finally {
+        if (!cancelled) {
+          setOwnersLoading(false);
+        }
+      }
+    }
+
+    loadOwners();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isEdit, token]);
 
   async function save() {
     try {
@@ -120,27 +155,68 @@ export function OrganizationFormPage({ mode }) {
                 </Stack>
                 <RadioGroup
                   value={form.ownerMode}
-                  onChange={(event) => setForm({ ...form, ownerMode: event.target.value })}
+                  onChange={(event) => setForm((current) => ({ ...current, ownerMode: event.target.value }))}
                 >
                   <FormControlLabel value="new" control={<Radio />} label="Создать нового владельца" />
                   <FormControlLabel value="existing" control={<Radio />} label="Дать доступ существующему владельцу" />
                 </RadioGroup>
 
                 {form.ownerMode === 'existing' ? (
-                  <TextField
-                    label="Логин существующего владельца"
-                    value={form.existingOwnerLogin}
-                    onChange={(event) => setForm({ ...form, existingOwnerLogin: event.target.value })}
+                  <Autocomplete
+                    options={owners}
+                    loading={ownersLoading}
+                    value={owners.find((owner) => owner.login === form.existingOwnerLogin) || null}
+                    onChange={(_, nextOwner) => {
+                      setForm((current) => ({ ...current, existingOwnerLogin: nextOwner?.login || '' }));
+                    }}
+                    getOptionLabel={(option) =>
+                      option
+                        ? `${option.fullName || option.login} · ${option.login}${option.organizationId ? ` · орг. ${option.organizationId}` : ''}`
+                        : ''
+                    }
+                    isOptionEqualToValue={(option, value) => option.login === value.login}
                     fullWidth
-                    helperText="Введите логин уже созданного владельца. Он будет назначен первым владельцем новой организации."
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Выберите существующего владельца"
+                        helperText="В списке доступны все владельцы системы. Он будет назначен первым владельцем новой организации."
+                      />
+                    )}
                   />
                 ) : (
                   <>
-                    <TextField label="Логин" value={form.owner.login} onChange={(event) => setForm({ ...form, owner: { ...form.owner, login: event.target.value } })} fullWidth />
-                    <TextField label="Пароль" type="password" value={form.owner.password} onChange={(event) => setForm({ ...form, owner: { ...form.owner, password: event.target.value } })} fullWidth />
-                    <TextField label="ФИО" value={form.owner.fullName} onChange={(event) => setForm({ ...form, owner: { ...form.owner, fullName: event.target.value } })} fullWidth />
-                    <TextField label="Email" value={form.owner.email} onChange={(event) => setForm({ ...form, owner: { ...form.owner, email: event.target.value } })} fullWidth />
-                    <TextField label="Должность" value={form.owner.position} onChange={(event) => setForm({ ...form, owner: { ...form.owner, position: event.target.value } })} fullWidth />
+                    <TextField
+                      label="Логин"
+                      value={form.owner.login}
+                      onChange={(event) => setForm((current) => ({ ...current, owner: { ...current.owner, login: event.target.value } }))}
+                      fullWidth
+                    />
+                    <TextField
+                      label="Пароль"
+                      type="password"
+                      value={form.owner.password}
+                      onChange={(event) => setForm((current) => ({ ...current, owner: { ...current.owner, password: event.target.value } }))}
+                      fullWidth
+                    />
+                    <TextField
+                      label="ФИО"
+                      value={form.owner.fullName}
+                      onChange={(event) => setForm((current) => ({ ...current, owner: { ...current.owner, fullName: event.target.value } }))}
+                      fullWidth
+                    />
+                    <TextField
+                      label="Email"
+                      value={form.owner.email}
+                      onChange={(event) => setForm((current) => ({ ...current, owner: { ...current.owner, email: event.target.value } }))}
+                      fullWidth
+                    />
+                    <TextField
+                      label="Должность"
+                      value={form.owner.position}
+                      onChange={(event) => setForm((current) => ({ ...current, owner: { ...current.owner, position: event.target.value } }))}
+                      fullWidth
+                    />
                   </>
                 )}
               </>

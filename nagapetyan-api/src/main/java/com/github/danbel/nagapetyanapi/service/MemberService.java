@@ -35,6 +35,11 @@ public class MemberService {
         return store.getMembersByOrganization(organizationId);
     }
 
+    public List<OrganizationMember> listOwners(ActorContext context) {
+        accessService.requireSystemAdmin(context);
+        return store.getOwners();
+    }
+
     @Transactional
     public OrganizationMember createMember(ActorContext context, Long organizationId, MemberRequest request) {
         accessService.requireOrganizationWrite(context, organizationId);
@@ -91,6 +96,12 @@ public class MemberService {
 
     public List<com.github.danbel.nagapetyanapi.dto.MemberResponse> listMemberResponses(ActorContext context, Long organizationId) {
         return listMembers(context, organizationId).stream()
+                .map(mapperService::toMemberResponse)
+                .toList();
+    }
+
+    public List<com.github.danbel.nagapetyanapi.dto.MemberResponse> listOwnerResponses(ActorContext context) {
+        return listOwners(context).stream()
                 .map(mapperService::toMemberResponse)
                 .toList();
     }
