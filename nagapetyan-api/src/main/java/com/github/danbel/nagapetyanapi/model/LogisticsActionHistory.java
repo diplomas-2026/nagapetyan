@@ -7,7 +7,6 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 import java.time.Instant;
@@ -32,14 +31,11 @@ public class LogisticsActionHistory {
     private Long recordId;
     @Column(name = "record_shipment_number", nullable = false)
     private String recordShipmentNumber;
-    @Lob
-    @Column(name = "summary", nullable = false)
+    @Column(name = "summary", nullable = false, columnDefinition = "text")
     private String summary;
-    @Lob
-    @Column(name = "before_state")
+    @Column(name = "before_state", columnDefinition = "text")
     private String beforeState;
-    @Lob
-    @Column(name = "after_state")
+    @Column(name = "after_state", columnDefinition = "text")
     private String afterState;
     @Column(name = "reverted", nullable = false)
     private boolean reverted;
