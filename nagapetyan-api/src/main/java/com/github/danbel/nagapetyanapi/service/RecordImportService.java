@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -113,15 +114,17 @@ public class RecordImportService {
         }
 
         return new LogisticsRecordRequest(
-                row.get("shipmentnumber"),
-                row.getOrDefault("routefrom", ""),
-                row.getOrDefault("routeto", ""),
-                parseDate(row.get("shippedat")),
-                parseDate(row.get("planneddeliverydate")),
-                parseOptionalDate(row.get("deliveredat")),
-                parseStatus(row.get("status")),
-                row.getOrDefault("responsibledepartment", ""),
-                row.getOrDefault("note", "")
+                getValue(row, "shipmentnumber", "номеротправления", "номер"),
+                getValue(row, "routefrom", "откуда"),
+                getValue(row, "routeto", "куда"),
+                parseDate(getValue(row, "shippedat", "датаотправки")),
+                parseDate(getValue(row, "planneddeliverydate", "плановаядоставка", "плановаядатадоставки")),
+                parseDecimal(getValue(row, "weight", "вес")),
+                parseDecimal(getValue(row, "cost", "стоимость")),
+                parseOptionalDate(getValue(row, "deliveredat", "фактическаядоставка")),
+                parseStatus(getValue(row, "status", "статус")),
+                getValue(row, "responsibledepartment", "ответственноеподразделение"),
+                getValue(row, "note", "комментарий")
         );
     }
 
@@ -130,7 +133,39 @@ public class RecordImportService {
     }
 
     private String normalize(String value) {
-        return value == null ? "" : value.replaceAll("[^a-zA-Z0-9]", "").toLowerCase(Locale.ROOT);
+        return value == null ? "" : value.replaceAll("[^\\p{L}\\p{Nd}]", "").toLowerCase(Locale.ROOT);
+    }
+
+    private String getValue(Map<String, String> row, String... keys) {
+        for (String key : keys) {
+            String value = row.get(normalize(key));
+            if (value != null && !value.isBlank()) {
+                return value;
+            }
+        }
+        for (String key : keys) {
+            String value = row.get(normalize(key));
+            if (value != null) {
+                return value;
+            }
+        }
+        return "";
+    }
+
+    private BigDecimal parseDecimal(String value) {
+        if (value == null || value.isBlank()) {
+            return BigDecimal.ZERO;
+        }
+        try {
+            String normalized = value.trim().replace(" ", "").replace(",", ".");
+            normalized = normalized.replaceAll("[^0-9.\\-]", "");
+            if (normalized.isBlank() || normalized.equals("-") || normalized.equals(".")) {
+                return BigDecimal.ZERO;
+            }
+            return new BigDecimal(normalized);
+        } catch (Exception exception) {
+            return BigDecimal.ZERO;
+        }
     }
 
     private LocalDate parseDate(String value) {

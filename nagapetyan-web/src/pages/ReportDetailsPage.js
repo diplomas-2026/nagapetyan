@@ -7,6 +7,7 @@ import { MovementTimeline } from '../components/MovementTimeline';
 import { AppLayout } from '../components/AppLayout';
 import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
+import { formatMoney, formatWeight } from '../utils/formatters';
 import { getReportStatusLabel } from '../utils/labels';
 
 export function ReportDetailsPage() {
@@ -62,6 +63,8 @@ export function ReportDetailsPage() {
               <Typography>Статус: {getReportStatusLabel(report?.status)}</Typography>
               <Typography>Дата отправки: {report?.shippedAt || '-'}</Typography>
               <Typography>Плановая доставка: {report?.plannedDeliveryDate || '-'}</Typography>
+              <Typography>Вес: {formatWeight(report?.weight)}</Typography>
+              <Typography>Стоимость: {formatMoney(report?.cost)}</Typography>
               <Typography>Фактическая доставка: {report?.deliveredAt || '-'}</Typography>
               <Typography>Подразделение: {report?.responsibleDepartment || '-'}</Typography>
               <Typography>Комментарий: {report?.note || '-'}</Typography>

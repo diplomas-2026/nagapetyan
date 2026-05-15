@@ -12,6 +12,8 @@ const emptyReport = {
   routeTo: '',
   shippedAt: '',
   plannedDeliveryDate: '',
+  weight: '',
+  cost: '',
   deliveredAt: '',
   status: 'IN_TRANSIT',
   responsibleDepartment: '',
@@ -42,18 +44,42 @@ export function ReportFormPage({ mode }) {
 
   useEffect(() => {
     if (isEdit) {
-      api.getReport(token, organizationId, reportId).then(setForm).catch((error) => setMessage(error.message));
+      api.getReport(token, organizationId, reportId)
+        .then((data) =>
+          setForm({
+            shipmentNumber: data.shipmentNumber || '',
+            routeFrom: data.routeFrom || '',
+            routeTo: data.routeTo || '',
+            shippedAt: data.shippedAt || '',
+            plannedDeliveryDate: data.plannedDeliveryDate || '',
+            weight: data.weight ?? '',
+            cost: data.cost ?? '',
+            deliveredAt: data.deliveredAt || '',
+            status: data.status || 'IN_TRANSIT',
+            responsibleDepartment: data.responsibleDepartment || '',
+            note: data.note || '',
+          }),
+        )
+        .catch((error) => setMessage(error.message));
     }
   }, [isEdit, organizationId, reportId, token]);
+
+  function preparePayload() {
+    return {
+      ...form,
+      weight: form.weight === '' ? null : form.weight,
+      cost: form.cost === '' ? null : form.cost,
+    };
+  }
 
   async function save() {
     try {
       if (isEdit) {
-        await api.updateReport(token, organizationId, reportId, form);
+        await api.updateReport(token, organizationId, reportId, preparePayload());
         navigate(`/organizations/${organizationId}/reports/${reportId}`);
         return;
       }
-      const created = await api.createReport(token, organizationId, form);
+      const created = await api.createReport(token, organizationId, preparePayload());
       navigate(`/organizations/${organizationId}/reports/${created.id}`);
     } catch (error) {
       setMessage(error.message);
@@ -82,6 +108,24 @@ export function ReportFormPage({ mode }) {
             <TextField label="Куда" value={form.routeTo} onChange={(event) => setForm({ ...form, routeTo: event.target.value })} fullWidth />
             <TextField label="Дата отправки" type="date" value={form.shippedAt} onChange={(event) => setForm({ ...form, shippedAt: event.target.value })} InputLabelProps={{ shrink: true }} fullWidth />
             <TextField label="Плановая дата доставки" type="date" value={form.plannedDeliveryDate} onChange={(event) => setForm({ ...form, plannedDeliveryDate: event.target.value })} InputLabelProps={{ shrink: true }} fullWidth />
+            <TextField
+              label="Вес, кг"
+              type="number"
+              inputProps={{ step: '0.001', min: '0' }}
+              value={form.weight}
+              onChange={(event) => setForm({ ...form, weight: event.target.value })}
+              required
+              fullWidth
+            />
+            <TextField
+              label="Стоимость, руб."
+              type="number"
+              inputProps={{ step: '0.01', min: '0' }}
+              value={form.cost}
+              onChange={(event) => setForm({ ...form, cost: event.target.value })}
+              required
+              fullWidth
+            />
             <TextField label="Фактическая дата доставки" type="date" value={form.deliveredAt} onChange={(event) => setForm({ ...form, deliveredAt: event.target.value })} InputLabelProps={{ shrink: true }} fullWidth />
             <FormControl fullWidth>
               <InputLabel>Статус</InputLabel>

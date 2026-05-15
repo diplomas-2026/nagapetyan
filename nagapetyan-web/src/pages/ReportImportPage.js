@@ -66,6 +66,9 @@ export function ReportImportPage() {
             <Typography color="text.secondary">
               Для руководителя это загрузка отчета, а внутри системы файл будет обработан как импорт отправлений.
             </Typography>
+            <Typography color="text.secondary">
+              Поддерживаются колонки: номер отправления, откуда, куда, дата отправки, плановая дата доставки, вес, стоимость, статус и комментарий.
+            </Typography>
             <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
               Выбрать файл
               <input

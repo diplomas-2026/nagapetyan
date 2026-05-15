@@ -9,6 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -31,6 +32,10 @@ public class LogisticsRecord {
     private LocalDate shippedAt;
     @Column(name = "planned_delivery_date", nullable = false)
     private LocalDate plannedDeliveryDate;
+    @Column(name = "weight", nullable = false)
+    private BigDecimal weight;
+    @Column(name = "cost", nullable = false)
+    private BigDecimal cost;
     @Column(name = "delivered_at")
     private LocalDate deliveredAt;
     @Enumerated(EnumType.STRING)
@@ -96,6 +101,22 @@ public class LogisticsRecord {
 
     public void setPlannedDeliveryDate(LocalDate plannedDeliveryDate) {
         this.plannedDeliveryDate = plannedDeliveryDate;
+    }
+
+    public BigDecimal getWeight() {
+        return weight;
+    }
+
+    public void setWeight(BigDecimal weight) {
+        this.weight = weight;
+    }
+
+    public BigDecimal getCost() {
+        return cost;
+    }
+
+    public void setCost(BigDecimal cost) {
+        this.cost = cost;
     }
 
     public LocalDate getDeliveredAt() {

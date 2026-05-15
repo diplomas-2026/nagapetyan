@@ -93,6 +93,8 @@ public class MapperService {
                 record.getRouteTo(),
                 record.getShippedAt(),
                 record.getPlannedDeliveryDate(),
+                record.getWeight(),
+                record.getCost(),
                 record.getDeliveredAt(),
                 record.getStatus(),
                 record.getResponsibleDepartment(),

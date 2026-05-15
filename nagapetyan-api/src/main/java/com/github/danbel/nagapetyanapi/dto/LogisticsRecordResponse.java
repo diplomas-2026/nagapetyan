@@ -3,6 +3,7 @@ package com.github.danbel.nagapetyanapi.dto;
 import com.github.danbel.nagapetyanapi.model.ReportStatus;
 
 import java.util.List;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
@@ -14,6 +15,8 @@ public record LogisticsRecordResponse(
         String routeTo,
         LocalDate shippedAt,
         LocalDate plannedDeliveryDate,
+        BigDecimal weight,
+        BigDecimal cost,
         LocalDate deliveredAt,
         ReportStatus status,
         String responsibleDepartment,

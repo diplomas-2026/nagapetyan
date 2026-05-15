@@ -101,6 +101,8 @@ public class RecordService {
         record.setRouteTo(request.routeTo());
         record.setShippedAt(request.shippedAt());
         record.setPlannedDeliveryDate(request.plannedDeliveryDate());
+        record.setWeight(request.weight());
+        record.setCost(request.cost());
         record.setDeliveredAt(request.deliveredAt());
         record.setStatus(request.status());
         record.setResponsibleDepartment(request.responsibleDepartment());

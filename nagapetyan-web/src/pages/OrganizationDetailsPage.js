@@ -10,6 +10,7 @@ import { SummaryCards } from '../components/SummaryCards';
 import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
 import { useOrganizationDetails } from '../hooks/useOrganizationDetails';
+import { formatMoney, formatWeight } from '../utils/formatters';
 import { getReportStatusLabel, getRoleLabel } from '../utils/labels';
 
 export function OrganizationDetailsPage() {
@@ -169,6 +170,8 @@ export function OrganizationDetailsPage() {
                   <TableRow>
                     <TableCell>Номер отправления</TableCell>
                     <TableCell>Маршрут</TableCell>
+                    <TableCell>Вес</TableCell>
+                    <TableCell>Стоимость</TableCell>
                     <TableCell>Статус</TableCell>
                     <TableCell>Срок</TableCell>
                     <TableCell />
@@ -194,6 +197,8 @@ export function OrganizationDetailsPage() {
                       <TableCell>
                         {item.routeFrom} → {item.routeTo}
                       </TableCell>
+                      <TableCell>{formatWeight(item.weight)}</TableCell>
+                      <TableCell>{formatMoney(item.cost)}</TableCell>
                       <TableCell>
                         <Chip
                           size="small"
