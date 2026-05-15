@@ -1,16 +1,21 @@
 package com.github.danbel.nagapetyanapi.controller;
 
 import com.github.danbel.nagapetyanapi.dto.ImportResultResponse;
+import com.github.danbel.nagapetyanapi.dto.ExportFileResponse;
 import com.github.danbel.nagapetyanapi.dto.LogisticsRecordRequest;
 import com.github.danbel.nagapetyanapi.dto.LogisticsRecordResponse;
 import com.github.danbel.nagapetyanapi.service.AuthService;
+import com.github.danbel.nagapetyanapi.service.RecordExportService;
 import com.github.danbel.nagapetyanapi.service.RecordImportService;
 import com.github.danbel.nagapetyanapi.service.RecordService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,11 +34,13 @@ public class RecordController {
 
     private final RecordService recordService;
     private final RecordImportService recordImportService;
+    private final RecordExportService recordExportService;
     private final AuthService authService;
 
-    public RecordController(RecordService recordService, RecordImportService recordImportService, AuthService authService) {
+    public RecordController(RecordService recordService, RecordImportService recordImportService, RecordExportService recordExportService, AuthService authService) {
         this.recordService = recordService;
         this.recordImportService = recordImportService;
+        this.recordExportService = recordExportService;
         this.authService = authService;
     }
 
@@ -77,5 +84,16 @@ public class RecordController {
                                            @PathVariable Long organizationId,
                                            @RequestPart("file") MultipartFile file) throws IOException {
         return recordImportService.importFile(authService.requireContext(authorization), organizationId, file);
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> export(@RequestHeader(value = "Authorization", required = false) String authorization,
+                                         @PathVariable Long organizationId,
+                                         @RequestParam(value = "format", defaultValue = "xlsx") String format) {
+        ExportFileResponse export = recordExportService.exportRecords(authService.requireContext(authorization), organizationId, format);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + export.filename() + "\"")
+                .contentType(export.contentType())
+                .body(export.content());
     }
 }

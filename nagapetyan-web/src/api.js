@@ -36,6 +36,29 @@ async function request(path, { method = 'GET', body, token, isFormData = false }
   return payload;
 }
 
+async function requestFile(path, { token } = {}) {
+  const headers = {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  const response = await fetch(`${API_BASE_URL}${path}`, { headers });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || 'Не удалось скачать файл');
+  }
+
+  const payload = await response.blob();
+
+  const contentDisposition = response.headers.get('content-disposition') || '';
+  const match = contentDisposition.match(/filename="?(?<filename>[^"]+)"?/i);
+
+  return {
+    blob: payload,
+    filename: match?.groups?.filename || 'export',
+  };
+}
+
 export const api = {
   login: (body) => request('/auth/login', { method: 'POST', body }),
   getOrganizations: (token) => request('/organizations', { token }),
@@ -54,6 +77,8 @@ export const api = {
   createReport: (token, organizationId, body) => request(`/organizations/${organizationId}/reports`, { method: 'POST', token, body }),
   updateReport: (token, organizationId, reportId, body) => request(`/organizations/${organizationId}/reports/${reportId}`, { method: 'PUT', token, body }),
   deleteReport: (token, organizationId, reportId) => request(`/organizations/${organizationId}/reports/${reportId}`, { method: 'DELETE', token }),
+  exportReports: (token, organizationId, format = 'xlsx') =>
+    requestFile(`/organizations/${organizationId}/reports/export?format=${encodeURIComponent(format)}`, { token }),
   getMovements: (token, organizationId, reportId) => request(`/organizations/${organizationId}/reports/${reportId}/movements`, { token }),
   getMovement: (token, organizationId, reportId, movementId) => request(`/organizations/${organizationId}/reports/${reportId}/movements/${movementId}`, { token }),
   createMovement: (token, organizationId, reportId, body) =>

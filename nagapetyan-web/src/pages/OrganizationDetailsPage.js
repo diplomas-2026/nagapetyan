@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Box, Button, Card, CardContent, Chip, Snackbar, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import DownloadIcon from '@mui/icons-material/Download';
 import EditIcon from '@mui/icons-material/Edit';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -28,6 +29,7 @@ export function OrganizationDetailsPage() {
   const [message, setMessage] = useState(null);
   const [historyItems, setHistoryItems] = useState([]);
   const [historyMessage, setHistoryMessage] = useState(null);
+  const [exportingFormat, setExportingFormat] = useState(null);
   const [memberSearch, setMemberSearch] = useState('');
   const [memberRoleFilter, setMemberRoleFilter] = useState('all');
   const [memberSort, setMemberSort] = useState('name-asc');
@@ -74,6 +76,25 @@ export function OrganizationDetailsPage() {
     } catch (error) {
       setHistoryItems([]);
       setHistoryMessage(error.message);
+    }
+  }
+
+  async function handleExportReports(format) {
+    try {
+      setExportingFormat(format);
+      const exportFile = await api.exportReports(token, organizationId, format);
+      const url = window.URL.createObjectURL(exportFile.blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = exportFile.filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setExportingFormat(null);
     }
   }
 
@@ -185,6 +206,22 @@ export function OrganizationDetailsPage() {
               </Button>
             </>
           ) : null}
+          <Button
+            onClick={() => handleExportReports('xlsx')}
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            disabled={exportingFormat !== null}
+          >
+            Excel
+          </Button>
+          <Button
+            onClick={() => handleExportReports('pdf')}
+            variant="outlined"
+            startIcon={<DownloadIcon />}
+            disabled={exportingFormat !== null}
+          >
+            PDF
+          </Button>
         </Stack>
       }
     >
