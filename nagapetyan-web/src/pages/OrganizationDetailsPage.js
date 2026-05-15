@@ -6,6 +6,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
+import { OrganizationAnalyticsPanel } from '../components/OrganizationAnalyticsPanel';
 import { ActionHistoryList } from '../components/ActionHistoryList';
 import { ListToolbar } from '../components/ListToolbar';
 import { SectionTabs } from '../components/SectionTabs';
@@ -50,10 +51,6 @@ export function OrganizationDetailsPage() {
   }
 
   function handleTabChange(nextTab) {
-    if (nextTab === 'analytics') {
-      navigate(`/organizations/${organizationId}/analytics`);
-      return;
-    }
     setTab(nextTab);
   }
 
@@ -172,7 +169,7 @@ export function OrganizationDetailsPage() {
               Редактировать
             </Button>
           ) : null}
-          <Button component={Link} to={`/organizations/${organizationId}/analytics`} variant="outlined">
+          <Button onClick={() => setTab('analytics')} variant="outlined">
             Аналитика
           </Button>
           {user?.role !== 'EMPLOYEE' ? (
@@ -222,23 +219,7 @@ export function OrganizationDetailsPage() {
           </Stack>
         ) : null}
 
-        {tab === 'analytics' ? (
-          <Card variant="outlined">
-            <CardContent>
-              <Stack spacing={1.25}>
-                <Typography variant="h6">Аналитика</Typography>
-                <Typography color="text.secondary">
-                  Графики и статистика доступны на отдельной странице.
-                </Typography>
-                <Box>
-                  <Button component={Link} to={`/organizations/${organizationId}/analytics`} variant="contained">
-                    Открыть аналитику
-                  </Button>
-                </Box>
-              </Stack>
-            </CardContent>
-          </Card>
-        ) : null}
+        {tab === 'analytics' ? <OrganizationAnalyticsPanel dashboard={dashboard} members={members} reports={reports} /> : null}
 
         {tab === 'members' ? (
           <Card>
