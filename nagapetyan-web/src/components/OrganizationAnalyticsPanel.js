@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useMemo } from 'react';
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import {
   Area,
@@ -66,40 +66,10 @@ function groupMonthly(reports) {
     }));
 }
 
-function useMeasuredWidth() {
-  const ref = useRef(null);
-  const [width, setWidth] = useState(0);
-
-  useLayoutEffect(() => {
-    const element = ref.current;
-    if (!element) {
-      return undefined;
-    }
-
-    const update = () => {
-      const nextWidth = Math.max(0, Math.floor(element.getBoundingClientRect().width));
-      setWidth((current) => (current === nextWidth ? current : nextWidth));
-    };
-
-    update();
-
-    const observer = new ResizeObserver(() => {
-      update();
-    });
-    observer.observe(element);
-
-    return () => observer.disconnect();
-  }, []);
-
-  return [ref, width];
-}
-
-function ChartShell({ height = 320, children }) {
-  const [ref, width] = useMeasuredWidth();
-
+function ChartFrame({ children }) {
   return (
-    <Box ref={ref} sx={{ width: '100%', minWidth: 0, height }}>
-      {width > 0 ? children(width, height) : null}
+    <Box sx={{ width: '100%', minWidth: 0, overflowX: 'auto' }}>
+      <Box sx={{ minWidth: 760 }}>{children}</Box>
     </Box>
   );
 }
@@ -153,6 +123,8 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
     { label: 'Суммарный вес', value: formatWeight(stats.totalWeight) },
     { label: 'Суммарная стоимость', value: formatMoney(stats.totalCost) },
   ];
+
+  const chartWidth = 760;
 
   return (
     <Stack spacing={3}>
@@ -219,18 +191,16 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Сотрудники по ролям</Typography>
-              <ChartShell height={320}>
-                {(width, height) => (
-                  <PieChart width={width} height={height}>
-                    <Pie data={stats.membersByRole} dataKey="value" nameKey="name" innerRadius={75} outerRadius={120} paddingAngle={4} cx={width / 2} cy={height / 2}>
-                      {stats.membersByRole.map((entry, index) => (
-                        <Cell key={entry.name} fill={ROLE_COLORS[index % ROLE_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                )}
-              </ChartShell>
+              <ChartFrame>
+                <PieChart width={chartWidth} height={320}>
+                  <Pie data={stats.membersByRole} dataKey="value" nameKey="name" innerRadius={75} outerRadius={120} cx={chartWidth / 2} cy={160} paddingAngle={4}>
+                    {stats.membersByRole.map((entry, index) => (
+                      <Cell key={entry.name} fill={ROLE_COLORS[index % ROLE_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ChartFrame>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {stats.membersByRole.map((item, index) => (
                   <Chip key={item.name} label={`${item.name}: ${item.value}`} sx={{ bgcolor: `${ROLE_COLORS[index % ROLE_COLORS.length]}15`, borderColor: `${ROLE_COLORS[index % ROLE_COLORS.length]}40` }} variant="outlined" />
@@ -244,18 +214,16 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Статусы отправлений</Typography>
-              <ChartShell height={320}>
-                {(width, height) => (
-                  <PieChart width={width} height={height}>
-                    <Pie data={stats.reportsByStatus} dataKey="value" nameKey="name" innerRadius={75} outerRadius={120} paddingAngle={4} cx={width / 2} cy={height / 2}>
-                      {stats.reportsByStatus.map((entry, index) => (
-                        <Cell key={entry.name} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                )}
-              </ChartShell>
+              <ChartFrame>
+                <PieChart width={chartWidth} height={320}>
+                  <Pie data={stats.reportsByStatus} dataKey="value" nameKey="name" innerRadius={75} outerRadius={120} cx={chartWidth / 2} cy={160} paddingAngle={4}>
+                    {stats.reportsByStatus.map((entry, index) => (
+                      <Cell key={entry.name} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ChartFrame>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {stats.reportsByStatus.map((item, index) => (
                   <Chip key={item.name} label={`${item.name}: ${item.value}`} sx={{ bgcolor: `${STATUS_COLORS[index % STATUS_COLORS.length]}15`, borderColor: `${STATUS_COLORS[index % STATUS_COLORS.length]}40` }} variant="outlined" />
@@ -280,20 +248,18 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Динамика отправлений по месяцам</Typography>
-              <ChartShell height={320}>
-                {(width, height) => (
-                  <LineChart data={stats.monthly} width={width} height={height}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="label" />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="shipments" stroke={TREND_COLORS[0]} strokeWidth={3} dot={{ r: 3 }} name="Отправления" />
-                    <Line type="monotone" dataKey="weight" stroke={TREND_COLORS[1]} strokeWidth={3} dot={{ r: 3 }} name="Вес, кг" />
-                    <Line type="monotone" dataKey="cost" stroke={TREND_COLORS[2]} strokeWidth={3} dot={{ r: 3 }} name="Стоимость, руб." />
-                  </LineChart>
-                )}
-              </ChartShell>
+              <ChartFrame>
+                <LineChart data={stats.monthly} width={chartWidth} height={320}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="label" />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="shipments" stroke={TREND_COLORS[0]} strokeWidth={3} dot={{ r: 3 }} name="Отправления" />
+                  <Line type="monotone" dataKey="weight" stroke={TREND_COLORS[1]} strokeWidth={3} dot={{ r: 3 }} name="Вес, кг" />
+                  <Line type="monotone" dataKey="cost" stroke={TREND_COLORS[2]} strokeWidth={3} dot={{ r: 3 }} name="Стоимость, руб." />
+                </LineChart>
+              </ChartFrame>
             </Stack>
           </CardContent>
         </Card>
@@ -302,17 +268,15 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Топ направлений</Typography>
-              <ChartShell height={320}>
-                {(width, height) => (
-                  <BarChart data={topRoutes} layout="vertical" width={width} height={height}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis type="number" allowDecimals={false} />
-                    <YAxis type="category" dataKey="name" width={120} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#2563eb" radius={[0, 8, 8, 0]} />
-                  </BarChart>
-                )}
-              </ChartShell>
+              <ChartFrame>
+                <BarChart data={topRoutes} layout="vertical" width={chartWidth} height={320}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" allowDecimals={false} />
+                  <YAxis type="category" dataKey="name" width={120} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#2563eb" radius={[0, 8, 8, 0]} />
+                </BarChart>
+              </ChartFrame>
             </Stack>
           </CardContent>
         </Card>
@@ -332,17 +296,15 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Топ получателей</Typography>
-              <ChartShell height={280}>
-                {(width, height) => (
-                  <BarChart data={stats.topDestinations} width={width} height={height}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" interval={0} angle={-15} textAnchor="end" height={70} />
-                    <YAxis allowDecimals={false} />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#0f766e" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                )}
-              </ChartShell>
+              <ChartFrame>
+                <BarChart data={stats.topDestinations} width={chartWidth} height={280}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" interval={0} angle={-15} textAnchor="end" height={70} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#0f766e" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ChartFrame>
             </Stack>
           </CardContent>
         </Card>
@@ -367,29 +329,27 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
         <CardContent>
           <Stack spacing={2}>
             <Typography variant="h6">Комбинированная динамика</Typography>
-            <ChartShell height={320}>
-              {(width, height) => (
-                <AreaChart data={stats.monthly} width={width} height={height}>
-                  <defs>
-                    <linearGradient id="shipmentsColor" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2563eb" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#2563eb" stopOpacity={0.1} />
-                    </linearGradient>
-                    <linearGradient id="weightColor" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#14b8a6" stopOpacity={0.1} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="label" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Area type="monotone" dataKey="shipments" stroke="#2563eb" fillOpacity={1} fill="url(#shipmentsColor)" name="Отправления" />
-                  <Area type="monotone" dataKey="weight" stroke="#14b8a6" fillOpacity={1} fill="url(#weightColor)" name="Вес, кг" />
-                </AreaChart>
-              )}
-            </ChartShell>
+            <ChartFrame>
+              <AreaChart data={stats.monthly} width={chartWidth} height={320}>
+                <defs>
+                  <linearGradient id="shipmentsColor" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563eb" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#2563eb" stopOpacity={0.1} />
+                  </linearGradient>
+                  <linearGradient id="weightColor" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#14b8a6" stopOpacity={0.1} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="label" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Area type="monotone" dataKey="shipments" stroke="#2563eb" fillOpacity={1} fill="url(#shipmentsColor)" name="Отправления" />
+                <Area type="monotone" dataKey="weight" stroke="#14b8a6" fillOpacity={1} fill="url(#weightColor)" name="Вес, кг" />
+              </AreaChart>
+            </ChartFrame>
           </Stack>
         </CardContent>
       </Card>
