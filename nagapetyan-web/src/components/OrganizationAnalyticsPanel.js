@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import {
   Area,
@@ -12,7 +12,6 @@ import {
   LineChart,
   Pie,
   PieChart,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -65,6 +64,41 @@ function groupMonthly(reports) {
       ...item,
       label: monthLabel(item.month),
     }));
+}
+
+function useMeasuredWidth() {
+  const ref = useRef(null);
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) {
+      return undefined;
+    }
+
+    const update = () => {
+      setWidth(Math.max(0, Math.floor(element.getBoundingClientRect().width)));
+    };
+
+    update();
+
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, []);
+
+  return [ref, width];
+}
+
+function ChartShell({ height = 320, children }) {
+  const [ref, width] = useMeasuredWidth();
+
+  return (
+    <Box ref={ref} sx={{ width: '100%', minWidth: 0, height }}>
+      {width > 0 ? children(width, height) : null}
+    </Box>
+  );
 }
 
 export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = [] }) {
@@ -178,22 +212,22 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
           },
         }}
       >
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ minWidth: 0 }}>
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Сотрудники по ролям</Typography>
-              <Box sx={{ height: 320 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={stats.membersByRole} dataKey="value" nameKey="name" innerRadius={75} outerRadius={120} paddingAngle={4}>
+              <ChartShell height={320}>
+                {(width, height) => (
+                  <PieChart width={width} height={height}>
+                    <Pie data={stats.membersByRole} dataKey="value" nameKey="name" innerRadius={75} outerRadius={120} paddingAngle={4} cx={width / 2} cy={height / 2}>
                       {stats.membersByRole.map((entry, index) => (
                         <Cell key={entry.name} fill={ROLE_COLORS[index % ROLE_COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip />
                   </PieChart>
-                </ResponsiveContainer>
-              </Box>
+                )}
+              </ChartShell>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {stats.membersByRole.map((item, index) => (
                   <Chip key={item.name} label={`${item.name}: ${item.value}`} sx={{ bgcolor: `${ROLE_COLORS[index % ROLE_COLORS.length]}15`, borderColor: `${ROLE_COLORS[index % ROLE_COLORS.length]}40` }} variant="outlined" />
@@ -203,22 +237,22 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
           </CardContent>
         </Card>
 
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ minWidth: 0 }}>
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Статусы отправлений</Typography>
-              <Box sx={{ height: 320 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={stats.reportsByStatus} dataKey="value" nameKey="name" innerRadius={75} outerRadius={120} paddingAngle={4}>
+              <ChartShell height={320}>
+                {(width, height) => (
+                  <PieChart width={width} height={height}>
+                    <Pie data={stats.reportsByStatus} dataKey="value" nameKey="name" innerRadius={75} outerRadius={120} paddingAngle={4} cx={width / 2} cy={height / 2}>
                       {stats.reportsByStatus.map((entry, index) => (
                         <Cell key={entry.name} fill={STATUS_COLORS[index % STATUS_COLORS.length]} />
                       ))}
                     </Pie>
                     <Tooltip />
                   </PieChart>
-                </ResponsiveContainer>
-              </Box>
+                )}
+              </ChartShell>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {stats.reportsByStatus.map((item, index) => (
                   <Chip key={item.name} label={`${item.name}: ${item.value}`} sx={{ bgcolor: `${STATUS_COLORS[index % STATUS_COLORS.length]}15`, borderColor: `${STATUS_COLORS[index % STATUS_COLORS.length]}40` }} variant="outlined" />
@@ -239,13 +273,13 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
           },
         }}
       >
-        <Card variant="outlined" sx={{ gridColumn: { lg: 'span 2' } }}>
+        <Card variant="outlined" sx={{ gridColumn: { lg: 'span 2' }, minWidth: 0 }}>
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Динамика отправлений по месяцам</Typography>
-              <Box sx={{ height: 320 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={stats.monthly}>
+              <ChartShell height={320}>
+                {(width, height) => (
+                  <LineChart data={stats.monthly} width={width} height={height}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="label" />
                     <YAxis allowDecimals={false} />
@@ -255,27 +289,27 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
                     <Line type="monotone" dataKey="weight" stroke={TREND_COLORS[1]} strokeWidth={3} dot={{ r: 3 }} name="Вес, кг" />
                     <Line type="monotone" dataKey="cost" stroke={TREND_COLORS[2]} strokeWidth={3} dot={{ r: 3 }} name="Стоимость, руб." />
                   </LineChart>
-                </ResponsiveContainer>
-              </Box>
+                )}
+              </ChartShell>
             </Stack>
           </CardContent>
         </Card>
 
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ minWidth: 0 }}>
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Топ направлений</Typography>
-              <Box sx={{ height: 320 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={topRoutes} layout="vertical">
+              <ChartShell height={320}>
+                {(width, height) => (
+                  <BarChart data={topRoutes} layout="vertical" width={width} height={height}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" allowDecimals={false} />
                     <YAxis type="category" dataKey="name" width={120} />
                     <Tooltip />
                     <Bar dataKey="value" fill="#2563eb" radius={[0, 8, 8, 0]} />
                   </BarChart>
-                </ResponsiveContainer>
-              </Box>
+                )}
+              </ChartShell>
             </Stack>
           </CardContent>
         </Card>
@@ -291,21 +325,21 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
           },
         }}
       >
-        <Card variant="outlined">
+        <Card variant="outlined" sx={{ minWidth: 0 }}>
           <CardContent>
             <Stack spacing={2}>
               <Typography variant="h6">Топ получателей</Typography>
-              <Box sx={{ height: 280 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stats.topDestinations}>
+              <ChartShell height={280}>
+                {(width, height) => (
+                  <BarChart data={stats.topDestinations} width={width} height={height}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" interval={0} angle={-15} textAnchor="end" height={70} />
                     <YAxis allowDecimals={false} />
                     <Tooltip />
                     <Bar dataKey="value" fill="#0f766e" radius={[8, 8, 0, 0]} />
                   </BarChart>
-                </ResponsiveContainer>
-              </Box>
+                )}
+              </ChartShell>
             </Stack>
           </CardContent>
         </Card>
@@ -326,13 +360,13 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
         </Card>
       </Box>
 
-      <Card variant="outlined">
+      <Card variant="outlined" sx={{ minWidth: 0 }}>
         <CardContent>
           <Stack spacing={2}>
             <Typography variant="h6">Комбинированная динамика</Typography>
-            <Box sx={{ height: 320 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.monthly}>
+            <ChartShell height={320}>
+              {(width, height) => (
+                <AreaChart data={stats.monthly} width={width} height={height}>
                   <defs>
                     <linearGradient id="shipmentsColor" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#2563eb" stopOpacity={0.8} />
@@ -351,8 +385,8 @@ export function OrganizationAnalyticsPanel({ dashboard, members = [], reports = 
                   <Area type="monotone" dataKey="shipments" stroke="#2563eb" fillOpacity={1} fill="url(#shipmentsColor)" name="Отправления" />
                   <Area type="monotone" dataKey="weight" stroke="#14b8a6" fillOpacity={1} fill="url(#weightColor)" name="Вес, кг" />
                 </AreaChart>
-              </ResponsiveContainer>
-            </Box>
+              )}
+            </ChartShell>
           </Stack>
         </CardContent>
       </Card>
