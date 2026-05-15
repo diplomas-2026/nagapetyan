@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Alert, Button, Card, CardContent, Snackbar, Stack, Typography } from '@mui/material';
+import DownloadIcon from '@mui/icons-material/Download';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
@@ -69,15 +70,20 @@ export function ReportImportPage() {
             <Typography color="text.secondary">
               Поддерживаются колонки: номер отправления, откуда, широта отправки, долгота отправки, куда, широта назначения, долгота назначения, дата отправки, плановая дата доставки, вес, стоимость, статус и комментарий.
             </Typography>
-            <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
-              Выбрать файл
-              <input
-                type="file"
-                hidden
-                accept=".xlsx,.xls,.csv"
-                onChange={(event) => setFile(event.target.files?.[0] || null)}
-              />
-            </Button>
+            <Stack direction="row" spacing={2} flexWrap="wrap">
+              <Button variant="outlined" component="label" startIcon={<UploadFileIcon />}>
+                Выбрать файл
+                <input
+                  type="file"
+                  hidden
+                  accept=".xlsx,.xls,.csv"
+                  onChange={(event) => setFile(event.target.files?.[0] || null)}
+                />
+              </Button>
+              <Button component="a" href="/import-example.csv" download variant="outlined" startIcon={<DownloadIcon />}>
+                Скачать пример
+              </Button>
+            </Stack>
             <Typography>{file ? `Выбран файл: ${file.name}` : 'Файл не выбран'}</Typography>
             <Stack direction="row" spacing={2} flexWrap="wrap">
               <Button variant="contained" onClick={upload} disabled={loading}>
