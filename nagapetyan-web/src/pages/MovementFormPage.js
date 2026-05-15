@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Button,
   Card,
@@ -25,7 +25,6 @@ const emptyMovement = {
   location: '',
   eventDate: '',
   description: '',
-  sortOrder: '',
 };
 
 const MOVEMENT_TYPE_OPTIONS = ['CREATED', 'ACCEPTED', 'IN_TRANSIT', 'DELIVERED', 'DELAYED', 'CANCELED'];
@@ -59,13 +58,10 @@ export function MovementFormPage({ mode }) {
           location: data.location || '',
           eventDate: data.eventDate || '',
           description: data.description || '',
-          sortOrder: data.sortOrder ?? '',
         }),
       )
       .catch((error) => setMessage(error.message));
   }, [isEdit, movementId, organizationId, reportId, token]);
-
-  const typeLabel = useMemo(() => getMovementTypeLabel(form.movementType), [form.movementType]);
 
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
@@ -75,10 +71,8 @@ export function MovementFormPage({ mode }) {
   }
 
   function preparePayload() {
-    const sortOrder = form.sortOrder === '' ? null : Number(form.sortOrder);
     return {
       ...form,
-      sortOrder: Number.isFinite(sortOrder) ? sortOrder : null,
     };
   }
 
@@ -147,16 +141,6 @@ export function MovementFormPage({ mode }) {
               multiline
               minRows={4}
             />
-            <TextField
-              label="Порядок сортировки"
-              type="number"
-              inputProps={{ min: '1', step: '1' }}
-              value={form.sortOrder}
-              onChange={(event) => setForm({ ...form, sortOrder: event.target.value })}
-              fullWidth
-              helperText={`Текущий тип: ${typeLabel}. Если оставить поле пустым, порядок назначится автоматически.`}
-            />
-
             <Stack direction="row" spacing={2} flexWrap="wrap">
               <Button variant="contained" onClick={save}>
                 Сохранить

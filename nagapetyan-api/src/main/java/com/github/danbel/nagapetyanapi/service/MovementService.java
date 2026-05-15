@@ -49,9 +49,7 @@ public class MovementService {
         LogisticsRecordMovement movement = new LogisticsRecordMovement();
         movement.setRecordId(record.getId());
         apply(movement, request);
-        if (movement.getSortOrder() == null) {
-            movement.setSortOrder(nextSortOrder(record.getId()));
-        }
+        movement.setSortOrder(nextSortOrder(record.getId()));
         return store.saveMovement(movement);
     }
 
@@ -63,10 +61,9 @@ public class MovementService {
         if (!recordId.equals(movement.getRecordId())) {
             throw new ResponseStatusException(NOT_FOUND, "Этап не найден");
         }
+        Integer existingSortOrder = movement.getSortOrder();
         apply(movement, request);
-        if (movement.getSortOrder() == null) {
-            movement.setSortOrder(nextSortOrder(recordId));
-        }
+        movement.setSortOrder(existingSortOrder);
         return store.saveMovement(movement);
     }
 
@@ -112,8 +109,6 @@ public class MovementService {
         movement.setLocation(request.location());
         movement.setEventDate(request.eventDate());
         movement.setDescription(request.description());
-        Integer sortOrder = request.sortOrder();
-        movement.setSortOrder(sortOrder == null || sortOrder < 1 ? null : sortOrder);
     }
 
     private Integer nextSortOrder(Long recordId) {
