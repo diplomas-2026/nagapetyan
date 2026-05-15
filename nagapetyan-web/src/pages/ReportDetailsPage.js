@@ -20,6 +20,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { MovementTimeline } from '../components/MovementTimeline';
+import { ShipmentRouteGraph } from '../components/ShipmentRouteGraph';
 import { AppLayout } from '../components/AppLayout';
 import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
@@ -170,6 +171,49 @@ export function ReportDetailsPage() {
             </Card>
           ))}
         </Box>
+
+        <Card variant="outlined">
+          <CardContent>
+            <Stack spacing={2}>
+              <Typography variant="h6">Граф маршрута</Typography>
+              <Typography color="text.secondary">
+                Отправление показано как связь между двумя точками. Нажми на узел, чтобы открыть карточку точки и её аналитику.
+              </Typography>
+              <ShipmentRouteGraph
+                fromPoint={{
+                  name: report?.routeFrom,
+                  latitude: report?.routeFromLatitude,
+                  longitude: report?.routeFromLongitude,
+                }}
+                toPoint={{
+                  name: report?.routeTo,
+                  latitude: report?.routeToLatitude,
+                  longitude: report?.routeToLongitude,
+                }}
+                onFromClick={() =>
+                  openPoint(
+                    buildPointUrl(organizationId, {
+                      kind: 'from',
+                      name: report?.routeFrom,
+                      latitude: report?.routeFromLatitude,
+                      longitude: report?.routeFromLongitude,
+                    }),
+                  )
+                }
+                onToClick={() =>
+                  openPoint(
+                    buildPointUrl(organizationId, {
+                      kind: 'to',
+                      name: report?.routeTo,
+                      latitude: report?.routeToLatitude,
+                      longitude: report?.routeToLongitude,
+                    }),
+                  )
+                }
+              />
+            </Stack>
+          </CardContent>
+        </Card>
 
         <Card variant="outlined">
           <CardContent>

@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { MapContainer, TileLayer, CircleMarker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { AppLayout } from '../components/AppLayout';
+import { PointRouteGraph } from '../components/PointRouteGraph';
 import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
 import { useOrganizationDetails } from '../hooks/useOrganizationDetails';
@@ -47,6 +48,20 @@ function buildCoordinates(lat, lng) {
 
 function normalizeText(value) {
   return String(value || '').trim();
+}
+
+function findPointDetails(reports, pointName, kind) {
+  const matcher = kind === 'to'
+    ? (item) => normalizeText(item.routeTo) === normalizeText(pointName)
+    : (item) => normalizeText(item.routeFrom) === normalizeText(pointName);
+  const source = reports.find(matcher);
+  if (!source) {
+    return { latitude: null, longitude: null };
+  }
+  return {
+    latitude: kind === 'to' ? source.routeToLatitude : source.routeFromLatitude,
+    longitude: kind === 'to' ? source.routeToLongitude : source.routeFromLongitude,
+  };
 }
 
 export function PointAnalyticsPage() {
@@ -96,6 +111,37 @@ export function PointAnalyticsPage() {
     };
   }, [pointName, reports]);
 
+  const graphNodes = useMemo(() => {
+    const incomingNodes = pointStats.incomingByOrigin.map((item) => {
+      const point = findPointDetails(reports, item.name, 'from');
+      return {
+        id: `incoming-${item.name}`,
+        name: item.name,
+        value: item.value,
+        kind: 'from',
+        latitude: point.latitude,
+        longitude: point.longitude,
+      };
+    });
+
+    const outgoingNodes = pointStats.outgoingByDestination.map((item) => {
+      const point = findPointDetails(reports, item.name, 'to');
+      return {
+        id: `outgoing-${item.name}`,
+        name: item.name,
+        value: item.value,
+        kind: 'to',
+        latitude: point.latitude,
+        longitude: point.longitude,
+      };
+    });
+
+    return {
+      incomingNodes,
+      outgoingNodes,
+    };
+  }, [pointStats.incomingByOrigin, pointStats.outgoingByDestination, reports]);
+
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
     if (nextOrganizationId) {
@@ -117,6 +163,17 @@ export function PointAnalyticsPage() {
 
   function openReportDetails(reportId) {
     window.location.assign(`/organizations/${organizationId}/reports/${reportId}`);
+  }
+
+  function openPointNode(point) {
+    window.location.assign(
+      `/organizations/${organizationId}/points?${new URLSearchParams({
+        kind: point.kind,
+        name: point.name,
+        lat: point.latitude === null || point.latitude === undefined ? '' : String(point.latitude),
+        lng: point.longitude === null || point.longitude === undefined ? '' : String(point.longitude),
+      }).toString()}`,
+    );
   }
 
   return (
@@ -178,6 +235,23 @@ export function PointAnalyticsPage() {
               ) : (
                 <Alert severity="info">Для этой точки не указаны координаты. На карте можно отобразить только точку с широтой и долготой.</Alert>
               )}
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Card variant="outlined">
+          <CardContent>
+            <Stack spacing={2}>
+              <Typography variant="h6">Граф маршрутов</Typography>
+              <Typography color="text.secondary">
+                Точка в центре, а рядом связанные пункты отправки и назначения. Нажми на любой узел, чтобы открыть его карточку.
+              </Typography>
+              <PointRouteGraph
+                centerPoint={{ name: pointName }}
+                incoming={graphNodes.incomingNodes}
+                outgoing={graphNodes.outgoingNodes}
+                onNodeClick={openPointNode}
+              />
             </Stack>
           </CardContent>
         </Card>
