@@ -1,16 +1,22 @@
+import { useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Box, Button, Stack, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import BusinessIcon from '@mui/icons-material/Business';
 import { AppLayout } from '../components/AppLayout';
+import { ListToolbar } from '../components/ListToolbar';
 import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
+import { matchesSearch } from '../utils/listFilters';
 
 export function OrganizationsPage() {
   const navigate = useNavigate();
   const { token, user, organizationId, setOrganizationId, clearSession } = useSession();
   const { organizations } = useOrganizations(token);
   const canEditOrganizations = user?.role === 'SYSTEM_ADMIN';
+  const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState('name-asc');
+  const [regionFilter, setRegionFilter] = useState('all');
 
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
@@ -22,6 +28,32 @@ export function OrganizationsPage() {
   function openOrganizationDetails(organizationIdValue) {
     window.location.assign(`/organizations/${organizationIdValue}`);
   }
+
+  const regionOptions = useMemo(() => {
+    const values = new Set(organizations.map((item) => item.region).filter(Boolean));
+    return ['all', ...values];
+  }, [organizations]);
+
+  const filteredOrganizations = organizations
+    .filter((item) => (regionFilter === 'all' ? true : item.region === regionFilter))
+    .filter((item) => matchesSearch([item.name, item.inn, item.region], search))
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'name-desc':
+          return String(b.name || '').localeCompare(String(a.name || ''), 'ru');
+        case 'region-asc':
+          return String(a.region || '').localeCompare(String(b.region || ''), 'ru');
+        case 'region-desc':
+          return String(b.region || '').localeCompare(String(a.region || ''), 'ru');
+        case 'reports-desc':
+          return Number(b.reportsCount || 0) - Number(a.reportsCount || 0);
+        case 'reports-asc':
+          return Number(a.reportsCount || 0) - Number(b.reportsCount || 0);
+        case 'name-asc':
+        default:
+          return String(a.name || '').localeCompare(String(b.name || ''), 'ru');
+      }
+    });
 
   return (
     <AppLayout
@@ -48,6 +80,27 @@ export function OrganizationsPage() {
           </Box>
         </Stack>
 
+        <ListToolbar
+          searchLabel="Поиск"
+          searchValue={search}
+          onSearchChange={setSearch}
+          sortLabel="Сортировка"
+          sortValue={sortBy}
+          onSortChange={setSortBy}
+          sortOptions={[
+            { value: 'name-asc', label: 'Название: по возрастанию' },
+            { value: 'name-desc', label: 'Название: по убыванию' },
+            { value: 'region-asc', label: 'Регион: по возрастанию' },
+            { value: 'region-desc', label: 'Регион: по убыванию' },
+            { value: 'reports-asc', label: 'Отправления: по возрастанию' },
+            { value: 'reports-desc', label: 'Отправления: по убыванию' },
+          ]}
+          filterLabel="Регион"
+          filterValue={regionFilter}
+          onFilterChange={setRegionFilter}
+          filterOptions={[{ value: 'all', label: 'Все регионы' }, ...regionOptions.filter((item) => item !== 'all').map((item) => ({ value: item, label: item }))]}
+        />
+
         <Table size="small">
           <TableHead>
             <TableRow>
@@ -60,33 +113,41 @@ export function OrganizationsPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {organizations.map((item) => (
-              <TableRow
-                key={item.id}
-                hover
-                sx={{ cursor: 'pointer' }}
-                onClick={() => {
-                  setOrganizationId(String(item.id));
-                  openOrganizationDetails(item.id);
-                }}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
+            {filteredOrganizations.length ? (
+              filteredOrganizations.map((item) => (
+                <TableRow
+                  key={item.id}
+                  hover
+                  sx={{ cursor: 'pointer' }}
+                  onClick={() => {
                     setOrganizationId(String(item.id));
                     openOrganizationDetails(item.id);
-                  }
-                }}
-              >
-                <TableCell>{item.name}</TableCell>
-                <TableCell>{item.inn}</TableCell>
-                <TableCell>{item.region}</TableCell>
-                <TableCell>{item.ownersCount}</TableCell>
-                <TableCell>{item.employeesCount}</TableCell>
-                <TableCell>{item.reportsCount}</TableCell>
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setOrganizationId(String(item.id));
+                      openOrganizationDetails(item.id);
+                    }
+                  }}
+                >
+                  <TableCell>{item.name}</TableCell>
+                  <TableCell>{item.inn}</TableCell>
+                  <TableCell>{item.region}</TableCell>
+                  <TableCell>{item.ownersCount}</TableCell>
+                  <TableCell>{item.employeesCount}</TableCell>
+                  <TableCell>{item.reportsCount}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={6} align="center">
+                  Ничего не найдено
+                </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </Stack>

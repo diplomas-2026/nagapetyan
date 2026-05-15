@@ -1,4 +1,4 @@
-import { AppBar, Box, Button, Chip, FormControl, InputLabel, MenuItem, Paper, Select, Stack, Toolbar, Typography } from '@mui/material';
+import { Autocomplete, AppBar, Box, Button, Chip, Paper, Stack, TextField, Toolbar, Typography } from '@mui/material';
 import { Link } from 'react-router-dom';
 import { getRoleLabel } from '../utils/labels';
 
@@ -42,16 +42,17 @@ export function AppLayout({
             </Button>
           </Stack>
 
-          <FormControl size="small" sx={{ minWidth: 260 }} disabled={!organizations.length}>
-            <InputLabel>Организация</InputLabel>
-            <Select value={organizationId || ''} label="Организация" onChange={(event) => onOrganizationChange(event.target.value)}>
-              {organizations.map((item) => (
-                <MenuItem key={item.id} value={String(item.id)}>
-                  {item.name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Autocomplete
+            size="small"
+            sx={{ minWidth: 300 }}
+            options={organizations}
+            value={organizations.find((item) => String(item.id) === String(organizationId || '')) || null}
+            onChange={(_, nextValue) => onOrganizationChange(nextValue ? String(nextValue.id) : '')}
+            getOptionLabel={(option) => option?.name || ''}
+            isOptionEqualToValue={(option, value) => Boolean(option && value) && String(option.id) === String(value.id)}
+            renderInput={(params) => <TextField {...params} label="Организация" />}
+            disabled={!organizations.length}
+          />
 
           {actions}
         </Toolbar>
