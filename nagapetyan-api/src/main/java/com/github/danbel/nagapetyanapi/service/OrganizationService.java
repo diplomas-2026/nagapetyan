@@ -62,24 +62,48 @@ public class OrganizationService {
         organization.setRegion(request.region());
         organization.setDescription(request.description());
 
-        OrganizationOwnerRequest ownerRequest = request.owner();
-        if (store.findAccountByLogin(ownerRequest.login()) != null) {
-            throw new ResponseStatusException(BAD_REQUEST, "Логин уже занят");
-        }
-
         organization = store.saveOrganization(organization);
+        if ("existing".equalsIgnoreCase(request.ownerMode())) {
+            String existingOwnerLogin = request.existingOwnerLogin();
+            if (existingOwnerLogin == null || existingOwnerLogin.isBlank()) {
+                throw new ResponseStatusException(BAD_REQUEST, "Укажите логин существующего владельца");
+            }
 
-        OrganizationMember owner = new OrganizationMember();
-        owner.setOrganizationId(organization.getId());
-        owner.setLogin(ownerRequest.login());
-        owner.setPasswordHash(authService.hashPassword(ownerRequest.password()));
-        owner.setFullName(ownerRequest.fullName());
-        owner.setEmail(ownerRequest.email());
-        owner.setPosition(ownerRequest.position() == null || ownerRequest.position().isBlank()
-                ? "Владелец организации"
-                : ownerRequest.position());
-        owner.setRole(ActorRole.OWNER);
-        store.saveMember(owner);
+            OrganizationMember owner = store.findMemberByLogin(existingOwnerLogin.trim());
+            if (owner == null) {
+                throw new ResponseStatusException(BAD_REQUEST, "Владелец с таким логином не найден");
+            }
+            if (owner.getRole() != ActorRole.OWNER) {
+                throw new ResponseStatusException(BAD_REQUEST, "Пользователь должен быть владельцем");
+            }
+
+            Long previousOrganizationId = owner.getOrganizationId();
+            owner.setOrganizationId(organization.getId());
+            store.saveMember(owner);
+            if (previousOrganizationId != null) {
+                store.deleteSessionsByLoginAndOrganizationId(owner.getLogin(), previousOrganizationId);
+            }
+        } else {
+            OrganizationOwnerRequest ownerRequest = request.owner();
+            if (ownerRequest == null) {
+                throw new ResponseStatusException(BAD_REQUEST, "Укажите данные владельца");
+            }
+            if (store.findAccountByLogin(ownerRequest.login()) != null) {
+                throw new ResponseStatusException(BAD_REQUEST, "Логин уже занят");
+            }
+
+            OrganizationMember owner = new OrganizationMember();
+            owner.setOrganizationId(organization.getId());
+            owner.setLogin(ownerRequest.login());
+            owner.setPasswordHash(authService.hashPassword(ownerRequest.password()));
+            owner.setFullName(ownerRequest.fullName());
+            owner.setEmail(ownerRequest.email());
+            owner.setPosition(ownerRequest.position() == null || ownerRequest.position().isBlank()
+                    ? "Владелец организации"
+                    : ownerRequest.position());
+            owner.setRole(ActorRole.OWNER);
+            store.saveMember(owner);
+        }
 
         return organization;
     }
@@ -128,7 +152,9 @@ public class OrganizationService {
 
     public OrganizationResponse createOrganizationResponse(ActorContext context, OrganizationCreateRequest request) {
         Organization organization = createOrganization(context, request);
-        return mapperService.toOrganizationResponse(organization, 1, 0, 0);
+        long ownerCount = store.getMembersByOrganization(organization.getId()).stream().filter(member -> member.getRole() == ActorRole.OWNER).count();
+        long employeeCount = store.getMembersByOrganization(organization.getId()).stream().filter(member -> member.getRole() == ActorRole.EMPLOYEE).count();
+        return mapperService.toOrganizationResponse(organization, ownerCount, employeeCount, 0);
     }
 
     public OrganizationResponse updateOrganizationResponse(ActorContext context, Long organizationId, OrganizationRequest request) {
