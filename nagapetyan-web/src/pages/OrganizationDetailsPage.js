@@ -25,37 +25,6 @@ function normalizeText(value) {
   return String(value || '').trim();
 }
 
-function countBy(items, getter) {
-  const map = new Map();
-  items.forEach((item) => {
-    const key = getter(item);
-    if (!key) {
-      return;
-    }
-    map.set(key, (map.get(key) || 0) + 1);
-  });
-  return Array.from(map.entries())
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value || String(a.name).localeCompare(String(b.name), 'ru'));
-}
-
-function findPointCoordinates(reports, pointName, kind) {
-  const source = reports.find((item) => {
-    if (kind === 'from') {
-      return normalizeText(item.routeFrom) === normalizeText(pointName);
-    }
-    return normalizeText(item.routeTo) === normalizeText(pointName);
-  });
-
-  if (!source) {
-    return { latitude: null, longitude: null };
-  }
-
-  return kind === 'from'
-    ? { latitude: source.routeFromLatitude, longitude: source.routeFromLongitude }
-    : { latitude: source.routeToLatitude, longitude: source.routeToLongitude };
-}
-
 export function OrganizationDetailsPage() {
   const navigate = useNavigate();
   const { organizationId } = useParams();
@@ -199,32 +168,62 @@ export function OrganizationDetailsPage() {
   );
 
   const routeGraphData = useMemo(() => {
-    const outgoing = countBy(reports, (item) => normalizeText(item.routeFrom)).slice(0, 6);
-    const incoming = countBy(reports, (item) => normalizeText(item.routeTo)).slice(0, 6);
+    const pointMap = new Map();
+    const linkMap = new Map();
+
+    reports.forEach((item) => {
+      const fromName = normalizeText(item.routeFrom);
+      const toName = normalizeText(item.routeTo);
+
+      if (fromName) {
+        const current = pointMap.get(fromName) || { id: `point-${fromName}`, name: item.routeFrom, count: 0, outgoingCount: 0, incomingCount: 0, latitude: item.routeFromLatitude, longitude: item.routeFromLongitude };
+        current.count += 1;
+        current.outgoingCount += 1;
+        if (current.latitude === null || current.latitude === undefined) {
+          current.latitude = item.routeFromLatitude;
+        }
+        if (current.longitude === null || current.longitude === undefined) {
+          current.longitude = item.routeFromLongitude;
+        }
+        pointMap.set(fromName, current);
+      }
+
+      if (toName) {
+        const current = pointMap.get(toName) || { id: `point-${toName}`, name: item.routeTo, count: 0, outgoingCount: 0, incomingCount: 0, latitude: item.routeToLatitude, longitude: item.routeToLongitude };
+        current.count += 1;
+        current.incomingCount += 1;
+        if (current.latitude === null || current.latitude === undefined) {
+          current.latitude = item.routeToLatitude;
+        }
+        if (current.longitude === null || current.longitude === undefined) {
+          current.longitude = item.routeToLongitude;
+        }
+        pointMap.set(toName, current);
+      }
+
+      if (fromName && toName) {
+        const key = `${fromName} -> ${toName}`;
+        const link = linkMap.get(key) || { source: fromName, target: toName, count: 0 };
+        link.count += 1;
+        linkMap.set(key, link);
+      }
+    });
+
+    const points = Array.from(pointMap.values())
+      .map((item) => ({
+        ...item,
+        kind: item.outgoingCount >= item.incomingCount ? 'from' : 'to',
+        color: item.outgoingCount >= item.incomingCount ? '#0f766e' : '#2563eb',
+      }))
+      .sort((a, b) => b.count - a.count || String(a.name).localeCompare(String(b.name), 'ru'))
+      .slice(0, 24);
 
     return {
-      leftNodes: outgoing.map((item) => {
-        const point = findPointCoordinates(reports, item.name, 'from');
-        return {
-          id: `from-${item.name}`,
-          name: item.name,
-          count: item.value,
-          kind: 'from',
-          latitude: point.latitude,
-          longitude: point.longitude,
-        };
-      }),
-      rightNodes: incoming.map((item) => {
-        const point = findPointCoordinates(reports, item.name, 'to');
-        return {
-          id: `to-${item.name}`,
-          name: item.name,
-          count: item.value,
-          kind: 'to',
-          latitude: point.latitude,
-          longitude: point.longitude,
-        };
-      }),
+      points,
+      links: Array.from(linkMap.values()).map((item) => ({
+        ...item,
+        color: '#2563eb',
+      })),
     };
   }, [reports]);
 
@@ -339,12 +338,7 @@ export function OrganizationDetailsPage() {
                 <Typography color="text.secondary">
                   Здесь показаны наиболее частые пункты отправки и назначения этой организации. Нажимай на точки, чтобы открыть их аналитику.
                 </Typography>
-                <OrganizationRouteGraph
-                  organizationName={organization?.name}
-                  leftNodes={routeGraphData.leftNodes}
-                  rightNodes={routeGraphData.rightNodes}
-                  onNodeClick={openPointNode}
-                />
+                <OrganizationRouteGraph points={routeGraphData.points} links={routeGraphData.links} onNodeClick={openPointNode} />
               </Stack>
             </CardContent>
           </Card>
