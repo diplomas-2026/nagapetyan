@@ -8,6 +8,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
 import { OrganizationAnalyticsPanel } from '../components/OrganizationAnalyticsPanel';
+import { OrganizationRouteGraph } from '../components/OrganizationRouteGraph';
 import { ActionHistoryList } from '../components/ActionHistoryList';
 import { ListToolbar } from '../components/ListToolbar';
 import { SectionTabs } from '../components/SectionTabs';
@@ -18,6 +19,42 @@ import { useOrganizationDetails } from '../hooks/useOrganizationDetails';
 import { formatMoney, formatWeight } from '../utils/formatters';
 import { getReportStatusLabel, getRoleLabel } from '../utils/labels';
 import { matchesSearch } from '../utils/listFilters';
+import { buildPointUrl } from '../utils/points';
+
+function normalizeText(value) {
+  return String(value || '').trim();
+}
+
+function countBy(items, getter) {
+  const map = new Map();
+  items.forEach((item) => {
+    const key = getter(item);
+    if (!key) {
+      return;
+    }
+    map.set(key, (map.get(key) || 0) + 1);
+  });
+  return Array.from(map.entries())
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value || String(a.name).localeCompare(String(b.name), 'ru'));
+}
+
+function findPointCoordinates(reports, pointName, kind) {
+  const source = reports.find((item) => {
+    if (kind === 'from') {
+      return normalizeText(item.routeFrom) === normalizeText(pointName);
+    }
+    return normalizeText(item.routeTo) === normalizeText(pointName);
+  });
+
+  if (!source) {
+    return { latitude: null, longitude: null };
+  }
+
+  return kind === 'from'
+    ? { latitude: source.routeFromLatitude, longitude: source.routeFromLongitude }
+    : { latitude: source.routeToLatitude, longitude: source.routeToLongitude };
+}
 
 export function OrganizationDetailsPage() {
   const navigate = useNavigate();
@@ -161,6 +198,47 @@ export function OrganizationDetailsPage() {
     [reportSearch, reportSort, reportStatusFilter, reports],
   );
 
+  const routeGraphData = useMemo(() => {
+    const outgoing = countBy(reports, (item) => normalizeText(item.routeFrom)).slice(0, 6);
+    const incoming = countBy(reports, (item) => normalizeText(item.routeTo)).slice(0, 6);
+
+    return {
+      leftNodes: outgoing.map((item) => {
+        const point = findPointCoordinates(reports, item.name, 'from');
+        return {
+          id: `from-${item.name}`,
+          name: item.name,
+          count: item.value,
+          kind: 'from',
+          latitude: point.latitude,
+          longitude: point.longitude,
+        };
+      }),
+      rightNodes: incoming.map((item) => {
+        const point = findPointCoordinates(reports, item.name, 'to');
+        return {
+          id: `to-${item.name}`,
+          name: item.name,
+          count: item.value,
+          kind: 'to',
+          latitude: point.latitude,
+          longitude: point.longitude,
+        };
+      }),
+    };
+  }, [reports]);
+
+  function openPointNode(point) {
+    window.location.assign(
+      buildPointUrl(organizationId, {
+        kind: point.kind,
+        name: point.name,
+        latitude: point.latitude,
+        longitude: point.longitude,
+      }),
+    );
+  }
+
   const summaryCards = dashboard?.summary
     ? [
         { label: 'Всего отправлений', value: dashboard.summary.totalRecords },
@@ -251,6 +329,25 @@ export function OrganizationDetailsPage() {
               </CardContent>
             </Card>
           </Stack>
+        ) : null}
+
+        {tab === 'graph' ? (
+          <Card variant="outlined">
+            <CardContent>
+              <Stack spacing={2}>
+                <Typography variant="h6">Граф точек маршрутов</Typography>
+                <Typography color="text.secondary">
+                  На графе показаны наиболее частые пункты отправки и назначения этой организации. Нажимай на точки, чтобы открыть их аналитику.
+                </Typography>
+                <OrganizationRouteGraph
+                  organizationName={organization?.name}
+                  leftNodes={routeGraphData.leftNodes}
+                  rightNodes={routeGraphData.rightNodes}
+                  onNodeClick={openPointNode}
+                />
+              </Stack>
+            </CardContent>
+          </Card>
         ) : null}
 
         {tab === 'analytics' ? <OrganizationAnalyticsPanel dashboard={dashboard} members={members} reports={reports} /> : null}
