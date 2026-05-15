@@ -46,7 +46,7 @@ export function OrganizationDetailsPage() {
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
     if (nextOrganizationId) {
-      navigate(`/organizations/${nextOrganizationId}`);
+      window.location.assign(`/organizations/${nextOrganizationId}`);
     }
   }
 
@@ -165,22 +165,22 @@ export function OrganizationDetailsPage() {
       actions={
         <Stack direction="row" spacing={1}>
           {user?.role === 'SYSTEM_ADMIN' ? (
-            <Button component={Link} to={`/organizations/${organizationId}/edit`} variant="outlined" startIcon={<EditIcon />}>
+            <Button component={Link} to={`/organizations/${organizationId}/edit`} reloadDocument variant="outlined" startIcon={<EditIcon />}>
               Редактировать
             </Button>
           ) : null}
           {user?.role !== 'EMPLOYEE' ? (
             <>
-              <Button component={Link} to={`/organizations/${organizationId}/members/new?role=OWNER`} variant="outlined" startIcon={<AddIcon />}>
+              <Button component={Link} to={`/organizations/${organizationId}/members/new?role=OWNER`} reloadDocument variant="outlined" startIcon={<AddIcon />}>
                 Владелец
               </Button>
-              <Button component={Link} to={`/organizations/${organizationId}/members/new?role=EMPLOYEE`} variant="outlined" startIcon={<AddIcon />}>
+              <Button component={Link} to={`/organizations/${organizationId}/members/new?role=EMPLOYEE`} reloadDocument variant="outlined" startIcon={<AddIcon />}>
                 Сотрудник
               </Button>
-              <Button component={Link} to={`/organizations/${organizationId}/reports/import`} variant="outlined" startIcon={<UploadFileIcon />}>
+              <Button component={Link} to={`/organizations/${organizationId}/reports/import`} reloadDocument variant="outlined" startIcon={<UploadFileIcon />}>
                 Загрузить отчет
               </Button>
-              <Button component={Link} to={`/organizations/${organizationId}/reports/new`} variant="contained" startIcon={<AddIcon />}>
+              <Button component={Link} to={`/organizations/${organizationId}/reports/new`} reloadDocument variant="contained" startIcon={<AddIcon />}>
                 Отправление
               </Button>
             </>

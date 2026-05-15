@@ -18,7 +18,7 @@ export function OrganizationAnalyticsPage() {
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
     if (nextOrganizationId) {
-      navigate(`/organizations/${nextOrganizationId}/analytics`);
+      window.location.assign(`/organizations/${nextOrganizationId}/analytics`);
     }
   }
 
@@ -46,7 +46,7 @@ export function OrganizationAnalyticsPage() {
       }}
       actions={
         <Stack direction="row" spacing={1}>
-          <Button component={Link} to={`/organizations/${organizationId}`} variant="outlined" startIcon={<ArrowBackIcon />}>
+          <Button component={Link} to={`/organizations/${organizationId}`} reloadDocument variant="outlined" startIcon={<ArrowBackIcon />}>
             К организации
           </Button>
         </Stack>

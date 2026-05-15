@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Alert, Box, Button, Container, Paper, Snackbar, Stack, TextField, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useSession } from '../hooks/useSession';
 
 export function LoginPage() {
-  const navigate = useNavigate();
   const { setAuth } = useSession();
   const [form, setForm] = useState({ login: '', password: '' });
   const [message, setMessage] = useState(null);
@@ -25,9 +23,9 @@ export function LoginPage() {
       localStorage.setItem('nag-last-login', form.login);
       setAuth(data);
       if (data.user?.organizationId) {
-        navigate(`/organizations/${data.user.organizationId}`);
+        window.location.assign(`/organizations/${data.user.organizationId}`);
       } else {
-        navigate('/organizations');
+        window.location.assign('/organizations');
       }
     } catch (error) {
       setMessage(error.message);

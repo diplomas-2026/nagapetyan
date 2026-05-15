@@ -39,7 +39,7 @@ export function OrganizationFormPage({ mode }) {
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
     if (nextOrganizationId) {
-      navigate(`/organizations/${nextOrganizationId}`);
+      window.location.assign(`/organizations/${nextOrganizationId}`);
     }
   }
 
@@ -66,10 +66,10 @@ export function OrganizationFormPage({ mode }) {
           region: form.region,
           description: form.description,
         });
-        navigate(`/organizations/${updated.id}`);
+        window.location.assign(`/organizations/${updated.id}`);
       } else {
         const created = await api.createOrganization(token, form);
-        navigate(`/organizations/${created.id}`);
+        window.location.assign(`/organizations/${created.id}`);
       }
     } catch (error) {
       setMessage(error.message);
@@ -114,7 +114,7 @@ export function OrganizationFormPage({ mode }) {
               <Button variant="contained" onClick={save}>
                 Сохранить
               </Button>
-              <Button component={Link} to={isEdit ? `/organizations/${targetId}` : '/organizations'} variant="outlined">
+              <Button component={Link} to={isEdit ? `/organizations/${targetId}` : '/organizations'} reloadDocument variant="outlined">
                 Отмена
               </Button>
             </Stack>

@@ -25,7 +25,7 @@ export function ReportImportPage() {
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
     if (nextOrganizationId) {
-      navigate(`/organizations/${nextOrganizationId}`);
+      window.location.assign(`/organizations/${nextOrganizationId}`);
     }
   }
 
@@ -38,7 +38,7 @@ export function ReportImportPage() {
     try {
       setLoading(true);
       await api.importReports(token, organizationId, file);
-      navigate(`/organizations/${organizationId}`);
+      window.location.assign(`/organizations/${organizationId}`);
     } catch (error) {
       setMessage(error.message);
     } finally {
@@ -83,7 +83,7 @@ export function ReportImportPage() {
               <Button variant="contained" onClick={upload} disabled={loading}>
                 Загрузить отчет
               </Button>
-              <Button component={Link} to={`/organizations/${organizationId}`} variant="outlined">
+              <Button component={Link} to={`/organizations/${organizationId}`} reloadDocument variant="outlined">
                 Отмена
               </Button>
             </Stack>

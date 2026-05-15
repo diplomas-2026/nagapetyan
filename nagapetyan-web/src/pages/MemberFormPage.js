@@ -36,7 +36,7 @@ export function MemberFormPage({ mode }) {
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
     if (nextOrganizationId) {
-      navigate(`/organizations/${nextOrganizationId}`);
+      window.location.assign(`/organizations/${nextOrganizationId}`);
     }
   }
 
@@ -61,11 +61,11 @@ export function MemberFormPage({ mode }) {
     try {
       if (isEdit) {
         await api.updateMember(token, organizationId, memberId, form);
-        navigate(`/organizations/${organizationId}/members/${memberId}`);
+        window.location.assign(`/organizations/${organizationId}/members/${memberId}`);
         return;
       }
       const created = await api.createMember(token, organizationId, form);
-      navigate(`/organizations/${organizationId}/members/${created.id}`);
+      window.location.assign(`/organizations/${organizationId}/members/${created.id}`);
     } catch (error) {
       setMessage(error.message);
     }
@@ -111,7 +111,7 @@ export function MemberFormPage({ mode }) {
               <Button variant="contained" onClick={save}>
                 Сохранить
               </Button>
-              <Button component={Link} to={`/organizations/${organizationId}`} variant="outlined">
+              <Button component={Link} to={`/organizations/${organizationId}`} reloadDocument variant="outlined">
                 Отмена
               </Button>
             </Stack>

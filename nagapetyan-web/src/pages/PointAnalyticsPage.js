@@ -99,7 +99,7 @@ export function PointAnalyticsPage() {
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
     if (nextOrganizationId) {
-      navigate(`/organizations/${nextOrganizationId}`);
+      window.location.assign(`/organizations/${nextOrganizationId}`);
     }
   }
 
@@ -133,7 +133,7 @@ export function PointAnalyticsPage() {
       }}
       actions={
         <Stack direction="row" spacing={1}>
-          <Button component={Link} to={`/organizations/${organizationId}`} variant="outlined" startIcon={<ArrowBackIcon />}>
+          <Button component={Link} to={`/organizations/${organizationId}`} reloadDocument variant="outlined" startIcon={<ArrowBackIcon />}>
             К организации
           </Button>
         </Stack>

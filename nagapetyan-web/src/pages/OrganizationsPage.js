@@ -21,7 +21,7 @@ export function OrganizationsPage() {
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
     if (nextOrganizationId) {
-      navigate(`/organizations/${nextOrganizationId}`);
+      window.location.assign(`/organizations/${nextOrganizationId}`);
     }
   }
 
@@ -67,7 +67,7 @@ export function OrganizationsPage() {
         clearSession();
         navigate('/login');
       }}
-      actions={canEditOrganizations ? <Button startIcon={<AddIcon />} component={Link} to="/organizations/new" variant="contained">Добавить организацию</Button> : null}
+      actions={canEditOrganizations ? <Button startIcon={<AddIcon />} component={Link} to="/organizations/new" reloadDocument variant="contained">Добавить организацию</Button> : null}
     >
       <Stack spacing={2}>
         <Stack direction="row" spacing={1.5} alignItems="center">

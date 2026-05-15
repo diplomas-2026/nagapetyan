@@ -42,7 +42,7 @@ export function ReportFormPage({ mode }) {
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
     if (nextOrganizationId) {
-      navigate(`/organizations/${nextOrganizationId}`);
+      window.location.assign(`/organizations/${nextOrganizationId}`);
     }
   }
 
@@ -88,11 +88,11 @@ export function ReportFormPage({ mode }) {
     try {
       if (isEdit) {
         await api.updateReport(token, organizationId, reportId, preparePayload());
-        navigate(`/organizations/${organizationId}/reports/${reportId}`);
+        window.location.assign(`/organizations/${organizationId}/reports/${reportId}`);
         return;
       }
       const created = await api.createReport(token, organizationId, preparePayload());
-      navigate(`/organizations/${organizationId}/reports/${created.id}`);
+      window.location.assign(`/organizations/${organizationId}/reports/${created.id}`);
     } catch (error) {
       setMessage(error.message);
     }
@@ -190,7 +190,7 @@ export function ReportFormPage({ mode }) {
               <Button variant="contained" onClick={save}>
                 Сохранить
               </Button>
-              <Button component={Link} to={`/organizations/${organizationId}`} variant="outlined">
+              <Button component={Link} to={`/organizations/${organizationId}`} reloadDocument variant="outlined">
                 Отмена
               </Button>
             </Stack>

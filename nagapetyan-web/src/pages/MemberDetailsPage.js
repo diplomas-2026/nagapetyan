@@ -41,7 +41,7 @@ export function MemberDetailsPage() {
   function handleOrganizationChange(nextOrganizationId) {
     setOrganizationId(nextOrganizationId);
     if (nextOrganizationId) {
-      navigate(`/organizations/${nextOrganizationId}`);
+      window.location.assign(`/organizations/${nextOrganizationId}`);
     }
   }
 
@@ -91,7 +91,7 @@ export function MemberDetailsPage() {
         navigate('/login');
       }}
       actions={user?.role !== 'EMPLOYEE' ? (
-        <Button component={Link} to={`/organizations/${organizationId}/members/${memberId}/edit`} variant="contained" startIcon={<EditIcon />}>
+        <Button component={Link} to={`/organizations/${organizationId}/members/${memberId}/edit`} reloadDocument variant="contained" startIcon={<EditIcon />}>
           Редактировать
         </Button>
       ) : null}
