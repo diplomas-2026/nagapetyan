@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-route
 import { LoginPage } from './pages/LoginPage';
 import { OrganizationsPage } from './pages/OrganizationsPage';
 import { OrganizationDetailsPage } from './pages/OrganizationDetailsPage';
+import { OrganizationAnalyticsPage } from './pages/OrganizationAnalyticsPage';
 import { OrganizationFormPage } from './pages/OrganizationFormPage';
 import { MemberDetailsPage } from './pages/MemberDetailsPage';
 import { MemberFormPage } from './pages/MemberFormPage';
@@ -72,6 +73,14 @@ function AppRoutes() {
         element={
           <RequireAuth>
             <OrganizationDetailsPage />
+          </RequireAuth>
+        }
+      />
+      <Route
+        path="/organizations/:organizationId/analytics"
+        element={
+          <RequireAuth>
+            <OrganizationAnalyticsPage />
           </RequireAuth>
         }
       />

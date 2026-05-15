@@ -6,7 +6,6 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
-import { OrganizationAnalyticsPanel } from '../components/OrganizationAnalyticsPanel';
 import { ActionHistoryList } from '../components/ActionHistoryList';
 import { ListToolbar } from '../components/ListToolbar';
 import { SectionTabs } from '../components/SectionTabs';
@@ -165,6 +164,9 @@ export function OrganizationDetailsPage() {
               Редактировать
             </Button>
           ) : null}
+          <Button component={Link} to={`/organizations/${organizationId}/analytics`} variant="outlined">
+            Аналитика
+          </Button>
           {user?.role !== 'EMPLOYEE' ? (
             <>
               <Button component={Link} to={`/organizations/${organizationId}/members/new?role=OWNER`} variant="outlined" startIcon={<AddIcon />}>
@@ -199,7 +201,6 @@ export function OrganizationDetailsPage() {
         {tab === 'overview' ? (
           <Stack spacing={3}>
             <SummaryCards items={summaryCards} />
-            <OrganizationAnalyticsPanel dashboard={dashboard} members={members} reports={reports} />
             <Card variant="outlined">
               <CardContent>
                 <Stack spacing={1}>
@@ -207,6 +208,21 @@ export function OrganizationDetailsPage() {
                   <Typography>ИНН: {organization?.inn || '-'}</Typography>
                   <Typography>Регион: {organization?.region || '-'}</Typography>
                   <Typography>Описание: {organization?.description || '-'}</Typography>
+                </Stack>
+              </CardContent>
+            </Card>
+            <Card variant="outlined">
+              <CardContent>
+                <Stack spacing={1.25}>
+                  <Typography variant="h6">Аналитика вынесена отдельно</Typography>
+                  <Typography color="text.secondary">
+                    Графики и расширенная статистика доступны на отдельной странице, чтобы обзор организации оставался быстрым и легким.
+                  </Typography>
+                  <Box>
+                    <Button component={Link} to={`/organizations/${organizationId}/analytics`} variant="contained">
+                      Открыть аналитику
+                    </Button>
+                  </Box>
                 </Stack>
               </CardContent>
             </Card>
