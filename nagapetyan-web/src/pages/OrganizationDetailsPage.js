@@ -6,6 +6,7 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { AppLayout } from '../components/AppLayout';
+import { OrganizationAnalyticsPanel } from '../components/OrganizationAnalyticsPanel';
 import { ActionHistoryList } from '../components/ActionHistoryList';
 import { ListToolbar } from '../components/ListToolbar';
 import { SectionTabs } from '../components/SectionTabs';
@@ -198,7 +199,8 @@ export function OrganizationDetailsPage() {
         {tab === 'overview' ? (
           <Stack spacing={3}>
             <SummaryCards items={summaryCards} />
-            <Card>
+            <OrganizationAnalyticsPanel dashboard={dashboard} members={members} reports={reports} />
+            <Card variant="outlined">
               <CardContent>
                 <Stack spacing={1}>
                   <Typography variant="h6">Информация</Typography>
