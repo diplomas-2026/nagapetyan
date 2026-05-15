@@ -221,7 +221,9 @@ export function OrganizationDetailsPage() {
     return {
       points,
       links: Array.from(linkMap.values()).map((item) => ({
-        ...item,
+        source: `point-${item.source}`,
+        target: `point-${item.target}`,
+        count: item.count,
         color: '#2563eb',
       })),
     };
