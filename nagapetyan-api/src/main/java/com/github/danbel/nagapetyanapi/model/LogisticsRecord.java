@@ -26,8 +26,16 @@ public class LogisticsRecord {
     private String shipmentNumber;
     @Column(name = "route_from", nullable = false)
     private String routeFrom;
+    @Column(name = "route_from_latitude", precision = 10, scale = 6)
+    private BigDecimal routeFromLatitude;
+    @Column(name = "route_from_longitude", precision = 10, scale = 6)
+    private BigDecimal routeFromLongitude;
     @Column(name = "route_to", nullable = false)
     private String routeTo;
+    @Column(name = "route_to_latitude", precision = 10, scale = 6)
+    private BigDecimal routeToLatitude;
+    @Column(name = "route_to_longitude", precision = 10, scale = 6)
+    private BigDecimal routeToLongitude;
     @Column(name = "shipped_at", nullable = false)
     private LocalDate shippedAt;
     @Column(name = "planned_delivery_date", nullable = false)
@@ -81,12 +89,44 @@ public class LogisticsRecord {
         this.routeFrom = routeFrom;
     }
 
+    public BigDecimal getRouteFromLatitude() {
+        return routeFromLatitude;
+    }
+
+    public void setRouteFromLatitude(BigDecimal routeFromLatitude) {
+        this.routeFromLatitude = routeFromLatitude;
+    }
+
+    public BigDecimal getRouteFromLongitude() {
+        return routeFromLongitude;
+    }
+
+    public void setRouteFromLongitude(BigDecimal routeFromLongitude) {
+        this.routeFromLongitude = routeFromLongitude;
+    }
+
     public String getRouteTo() {
         return routeTo;
     }
 
     public void setRouteTo(String routeTo) {
         this.routeTo = routeTo;
+    }
+
+    public BigDecimal getRouteToLatitude() {
+        return routeToLatitude;
+    }
+
+    public void setRouteToLatitude(BigDecimal routeToLatitude) {
+        this.routeToLatitude = routeToLatitude;
+    }
+
+    public BigDecimal getRouteToLongitude() {
+        return routeToLongitude;
+    }
+
+    public void setRouteToLongitude(BigDecimal routeToLongitude) {
+        this.routeToLongitude = routeToLongitude;
     }
 
     public LocalDate getShippedAt() {

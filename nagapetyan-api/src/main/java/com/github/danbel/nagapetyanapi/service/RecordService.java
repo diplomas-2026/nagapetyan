@@ -106,7 +106,11 @@ public class RecordService {
     private void apply(LogisticsRecord record, LogisticsRecordRequest request) {
         record.setShipmentNumber(request.shipmentNumber());
         record.setRouteFrom(request.routeFrom());
+        record.setRouteFromLatitude(request.routeFromLatitude());
+        record.setRouteFromLongitude(request.routeFromLongitude());
         record.setRouteTo(request.routeTo());
+        record.setRouteToLatitude(request.routeToLatitude());
+        record.setRouteToLongitude(request.routeToLongitude());
         record.setShippedAt(request.shippedAt());
         record.setPlannedDeliveryDate(request.plannedDeliveryDate());
         record.setWeight(request.weight());
@@ -123,7 +127,11 @@ public class RecordService {
         copy.setOrganizationId(record.getOrganizationId());
         copy.setShipmentNumber(record.getShipmentNumber());
         copy.setRouteFrom(record.getRouteFrom());
+        copy.setRouteFromLatitude(record.getRouteFromLatitude());
+        copy.setRouteFromLongitude(record.getRouteFromLongitude());
         copy.setRouteTo(record.getRouteTo());
+        copy.setRouteToLatitude(record.getRouteToLatitude());
+        copy.setRouteToLongitude(record.getRouteToLongitude());
         copy.setShippedAt(record.getShippedAt());
         copy.setPlannedDeliveryDate(record.getPlannedDeliveryDate());
         copy.setWeight(record.getWeight());

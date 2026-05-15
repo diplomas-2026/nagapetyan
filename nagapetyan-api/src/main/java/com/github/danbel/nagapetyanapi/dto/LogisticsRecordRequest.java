@@ -10,7 +10,11 @@ import java.time.LocalDate;
 public record LogisticsRecordRequest(
         @NotBlank String shipmentNumber,
         @NotBlank String routeFrom,
+        BigDecimal routeFromLatitude,
+        BigDecimal routeFromLongitude,
         @NotBlank String routeTo,
+        BigDecimal routeToLatitude,
+        BigDecimal routeToLongitude,
         @NotNull LocalDate shippedAt,
         @NotNull LocalDate plannedDeliveryDate,
         @NotNull BigDecimal weight,

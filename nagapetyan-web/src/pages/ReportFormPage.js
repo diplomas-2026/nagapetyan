@@ -9,7 +9,11 @@ import { useOrganizations } from '../hooks/useOrganizations';
 const emptyReport = {
   shipmentNumber: '',
   routeFrom: '',
+  routeFromLatitude: '',
+  routeFromLongitude: '',
   routeTo: '',
+  routeToLatitude: '',
+  routeToLongitude: '',
   shippedAt: '',
   plannedDeliveryDate: '',
   weight: '',
@@ -49,7 +53,11 @@ export function ReportFormPage({ mode }) {
           setForm({
             shipmentNumber: data.shipmentNumber || '',
             routeFrom: data.routeFrom || '',
+            routeFromLatitude: data.routeFromLatitude ?? '',
+            routeFromLongitude: data.routeFromLongitude ?? '',
             routeTo: data.routeTo || '',
+            routeToLatitude: data.routeToLatitude ?? '',
+            routeToLongitude: data.routeToLongitude ?? '',
             shippedAt: data.shippedAt || '',
             plannedDeliveryDate: data.plannedDeliveryDate || '',
             weight: data.weight ?? '',
@@ -69,6 +77,10 @@ export function ReportFormPage({ mode }) {
       ...form,
       weight: form.weight === '' ? null : form.weight,
       cost: form.cost === '' ? null : form.cost,
+      routeFromLatitude: form.routeFromLatitude === '' ? null : form.routeFromLatitude,
+      routeFromLongitude: form.routeFromLongitude === '' ? null : form.routeFromLongitude,
+      routeToLatitude: form.routeToLatitude === '' ? null : form.routeToLatitude,
+      routeToLongitude: form.routeToLongitude === '' ? null : form.routeToLongitude,
     };
   }
 
@@ -105,7 +117,43 @@ export function ReportFormPage({ mode }) {
             <Typography variant="h4">{isEdit ? 'Редактирование отправления' : 'Новое отправление'}</Typography>
             <TextField label="Номер отправления" value={form.shipmentNumber} onChange={(event) => setForm({ ...form, shipmentNumber: event.target.value })} fullWidth />
             <TextField label="Откуда" value={form.routeFrom} onChange={(event) => setForm({ ...form, routeFrom: event.target.value })} fullWidth />
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+              <TextField
+                label="Широта отправки"
+                type="number"
+                inputProps={{ step: '0.000001' }}
+                value={form.routeFromLatitude}
+                onChange={(event) => setForm({ ...form, routeFromLatitude: event.target.value })}
+                fullWidth
+              />
+              <TextField
+                label="Долгота отправки"
+                type="number"
+                inputProps={{ step: '0.000001' }}
+                value={form.routeFromLongitude}
+                onChange={(event) => setForm({ ...form, routeFromLongitude: event.target.value })}
+                fullWidth
+              />
+            </Stack>
             <TextField label="Куда" value={form.routeTo} onChange={(event) => setForm({ ...form, routeTo: event.target.value })} fullWidth />
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+              <TextField
+                label="Широта назначения"
+                type="number"
+                inputProps={{ step: '0.000001' }}
+                value={form.routeToLatitude}
+                onChange={(event) => setForm({ ...form, routeToLatitude: event.target.value })}
+                fullWidth
+              />
+              <TextField
+                label="Долгота назначения"
+                type="number"
+                inputProps={{ step: '0.000001' }}
+                value={form.routeToLongitude}
+                onChange={(event) => setForm({ ...form, routeToLongitude: event.target.value })}
+                fullWidth
+              />
+            </Stack>
             <TextField label="Дата отправки" type="date" value={form.shippedAt} onChange={(event) => setForm({ ...form, shippedAt: event.target.value })} InputLabelProps={{ shrink: true }} fullWidth />
             <TextField label="Плановая дата доставки" type="date" value={form.plannedDeliveryDate} onChange={(event) => setForm({ ...form, plannedDeliveryDate: event.target.value })} InputLabelProps={{ shrink: true }} fullWidth />
             <TextField

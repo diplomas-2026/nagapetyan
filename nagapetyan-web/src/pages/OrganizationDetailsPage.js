@@ -169,9 +169,6 @@ export function OrganizationDetailsPage() {
               Редактировать
             </Button>
           ) : null}
-          <Button onClick={() => setTab('analytics')} variant="outlined">
-            Аналитика
-          </Button>
           {user?.role !== 'EMPLOYEE' ? (
             <>
               <Button component={Link} to={`/organizations/${organizationId}/members/new?role=OWNER`} variant="outlined" startIcon={<AddIcon />}>

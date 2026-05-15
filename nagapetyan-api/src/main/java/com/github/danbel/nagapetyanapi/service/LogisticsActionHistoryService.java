@@ -143,6 +143,8 @@ public class LogisticsActionHistoryService {
         List<String> changes = new ArrayList<>();
         addChange(changes, "номер", before.getShipmentNumber(), after.getShipmentNumber());
         addChange(changes, "маршрут", joinRoute(before.getRouteFrom(), before.getRouteTo()), joinRoute(after.getRouteFrom(), after.getRouteTo()));
+        addChange(changes, "координаты отправки", joinPoint(before.getRouteFromLatitude(), before.getRouteFromLongitude()), joinPoint(after.getRouteFromLatitude(), after.getRouteFromLongitude()));
+        addChange(changes, "координаты назначения", joinPoint(before.getRouteToLatitude(), before.getRouteToLongitude()), joinPoint(after.getRouteToLatitude(), after.getRouteToLongitude()));
         addChange(changes, "вес", formatDecimal(before.getWeight()), formatDecimal(after.getWeight()));
         addChange(changes, "стоимость", formatDecimal(before.getCost()), formatDecimal(after.getCost()));
         addChange(changes, "статус", statusLabel(before.getStatus()), statusLabel(after.getStatus()));
@@ -160,6 +162,13 @@ public class LogisticsActionHistoryService {
 
     private String joinRoute(String from, String to) {
         return (from == null ? "" : from) + " → " + (to == null ? "" : to);
+    }
+
+    private String joinPoint(BigDecimal latitude, BigDecimal longitude) {
+        if (latitude == null && longitude == null) {
+            return "-";
+        }
+        return formatDecimal(latitude) + ", " + formatDecimal(longitude);
     }
 
     private String formatDecimal(BigDecimal value) {
@@ -204,7 +213,11 @@ public class LogisticsActionHistoryService {
                 record.getOrganizationId(),
                 record.getShipmentNumber(),
                 record.getRouteFrom(),
+                record.getRouteFromLatitude(),
+                record.getRouteFromLongitude(),
                 record.getRouteTo(),
+                record.getRouteToLatitude(),
+                record.getRouteToLongitude(),
                 record.getShippedAt(),
                 record.getPlannedDeliveryDate(),
                 record.getWeight(),
@@ -222,7 +235,11 @@ public class LogisticsActionHistoryService {
         record.setOrganizationId(snapshot.organizationId());
         record.setShipmentNumber(snapshot.shipmentNumber());
         record.setRouteFrom(snapshot.routeFrom());
+        record.setRouteFromLatitude(snapshot.routeFromLatitude());
+        record.setRouteFromLongitude(snapshot.routeFromLongitude());
         record.setRouteTo(snapshot.routeTo());
+        record.setRouteToLatitude(snapshot.routeToLatitude());
+        record.setRouteToLongitude(snapshot.routeToLongitude());
         record.setShippedAt(snapshot.shippedAt());
         record.setPlannedDeliveryDate(snapshot.plannedDeliveryDate());
         record.setWeight(snapshot.weight());

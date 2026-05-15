@@ -9,6 +9,7 @@ import { useSession } from '../hooks/useSession';
 import { useOrganizations } from '../hooks/useOrganizations';
 import { formatMoney, formatWeight } from '../utils/formatters';
 import { getReportStatusLabel } from '../utils/labels';
+import { buildPointUrl, formatCoordinate } from '../utils/points';
 
 function getStatusTone(report) {
   if (report?.deletedAt) {
@@ -56,7 +57,6 @@ export function ReportDetailsPage() {
   const infoCards = useMemo(
     () => [
       { label: 'Номер', value: report?.shipmentNumber || '-' },
-      { label: 'Маршрут', value: routeLabel },
       { label: 'Вес', value: formatWeight(report?.weight) },
       { label: 'Стоимость', value: formatMoney(report?.cost) },
       { label: 'Дата отправки', value: report?.shippedAt || '-' },
@@ -136,6 +136,79 @@ export function ReportDetailsPage() {
             </Card>
           ))}
         </Box>
+
+        <Card variant="outlined">
+          <CardContent>
+            <Stack spacing={2}>
+              <Typography variant="h6">Маршрут</Typography>
+              <Typography color="text.secondary">{routeLabel}</Typography>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gap: 2,
+                  gridTemplateColumns: {
+                    xs: '1fr',
+                    md: 'repeat(2, minmax(0, 1fr))',
+                  },
+                }}
+              >
+                <Card variant="outlined">
+                  <CardContent>
+                    <Stack spacing={1}>
+                      <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+                        Пункт отправки
+                      </Typography>
+                      <Button
+                        component={Link}
+                        to={buildPointUrl(organizationId, {
+                          kind: 'from',
+                          name: report?.routeFrom,
+                          latitude: report?.routeFromLatitude,
+                          longitude: report?.routeFromLongitude,
+                        })}
+                        variant="text"
+                        sx={{ alignSelf: 'flex-start', px: 0, minWidth: 0 }}
+                        disabled={!report?.routeFrom}
+                      >
+                        {report?.routeFrom || '-'}
+                      </Button>
+                      <Typography variant="body2" color="text.secondary">
+                        {formatCoordinate(report?.routeFromLatitude)}, {formatCoordinate(report?.routeFromLongitude)}
+                      </Typography>
+                    </Stack>
+                  </CardContent>
+                </Card>
+
+                <Card variant="outlined">
+                  <CardContent>
+                    <Stack spacing={1}>
+                      <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+                        Пункт назначения
+                      </Typography>
+                      <Button
+                        component={Link}
+                        to={buildPointUrl(organizationId, {
+                          kind: 'to',
+                          name: report?.routeTo,
+                          latitude: report?.routeToLatitude,
+                          longitude: report?.routeToLongitude,
+                        })}
+                        variant="text"
+                        sx={{ alignSelf: 'flex-start', px: 0, minWidth: 0 }}
+                        disabled={!report?.routeTo}
+                      >
+                        {report?.routeTo || '-'}
+                      </Button>
+                      <Typography variant="body2" color="text.secondary">
+                        {formatCoordinate(report?.routeToLatitude)}, {formatCoordinate(report?.routeToLongitude)}
+                      </Typography>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
 
         <Card variant="outlined">
           <CardContent>

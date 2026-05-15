@@ -116,7 +116,11 @@ public class RecordImportService {
         return new LogisticsRecordRequest(
                 getValue(row, "shipmentnumber", "номеротправления", "номер"),
                 getValue(row, "routefrom", "откуда"),
+                parseOptionalDecimal(getValue(row, "routefromlatitude", "широтаоткуда", "широтаотправки")),
+                parseOptionalDecimal(getValue(row, "routefromlongitude", "долготаоткуда", "долготаотправки")),
                 getValue(row, "routeto", "куда"),
+                parseOptionalDecimal(getValue(row, "routetolatitude", "широтакуда", "широтаприбытия")),
+                parseOptionalDecimal(getValue(row, "routetolongitude", "долготакуда", "долготаприбытия")),
                 parseDate(getValue(row, "shippedat", "датаотправки")),
                 parseDate(getValue(row, "planneddeliverydate", "плановаядоставка", "плановаядатадоставки")),
                 parseDecimal(getValue(row, "weight", "вес")),
@@ -166,6 +170,13 @@ public class RecordImportService {
         } catch (Exception exception) {
             return BigDecimal.ZERO;
         }
+    }
+
+    private BigDecimal parseOptionalDecimal(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return parseDecimal(value);
     }
 
     private LocalDate parseDate(String value) {
