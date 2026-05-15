@@ -213,6 +213,23 @@ public class RecordImportService {
         if (value == null || value.isBlank()) {
             return com.github.danbel.nagapetyanapi.model.ReportStatus.IN_TRANSIT;
         }
-        return com.github.danbel.nagapetyanapi.model.ReportStatus.valueOf(value.trim().toUpperCase(Locale.ROOT));
+        String normalized = normalize(value);
+        return switch (normalized) {
+            case "intransit", "впути", "впутиотправление", "впутидоставляется", "впутиедет" ->
+                    com.github.danbel.nagapetyanapi.model.ReportStatus.IN_TRANSIT;
+            case "delivered", "доставлено", "доставлен", "доставлена", "доставлены", "готовоквыдаче" ->
+                    com.github.danbel.nagapetyanapi.model.ReportStatus.DELIVERED;
+            case "delayed", "задержка", "сзадержкой", "просрочено", "опоздание" ->
+                    com.github.danbel.nagapetyanapi.model.ReportStatus.DELAYED;
+            case "canceled", "cancelled", "отменено", "отменен", "отменена", "отменены" ->
+                    com.github.danbel.nagapetyanapi.model.ReportStatus.CANCELED;
+            default -> {
+                try {
+                    yield com.github.danbel.nagapetyanapi.model.ReportStatus.valueOf(value.trim().toUpperCase(Locale.ROOT));
+                } catch (Exception exception) {
+                    yield com.github.danbel.nagapetyanapi.model.ReportStatus.IN_TRANSIT;
+                }
+            }
+        };
     }
 }
