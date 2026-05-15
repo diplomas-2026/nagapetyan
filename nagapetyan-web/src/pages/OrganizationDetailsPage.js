@@ -49,6 +49,14 @@ export function OrganizationDetailsPage() {
     }
   }
 
+  function handleTabChange(nextTab) {
+    if (nextTab === 'analytics') {
+      navigate(`/organizations/${organizationId}/analytics`);
+      return;
+    }
+    setTab(nextTab);
+  }
+
   function openReportDetails(reportId) {
     window.location.assign(`/organizations/${organizationId}/reports/${reportId}`);
   }
@@ -196,7 +204,7 @@ export function OrganizationDetailsPage() {
           </Typography>
         </Box>
 
-        <SectionTabs value={tab} onChange={setTab} showHistory={isLogisticsLeader} />
+        <SectionTabs value={tab} onChange={handleTabChange} showHistory={isLogisticsLeader} />
 
         {tab === 'overview' ? (
           <Stack spacing={3}>
@@ -211,22 +219,25 @@ export function OrganizationDetailsPage() {
                 </Stack>
               </CardContent>
             </Card>
-            <Card variant="outlined">
-              <CardContent>
-                <Stack spacing={1.25}>
-                  <Typography variant="h6">Аналитика вынесена отдельно</Typography>
-                  <Typography color="text.secondary">
-                    Графики и расширенная статистика доступны на отдельной странице, чтобы обзор организации оставался быстрым и легким.
-                  </Typography>
-                  <Box>
-                    <Button component={Link} to={`/organizations/${organizationId}/analytics`} variant="contained">
-                      Открыть аналитику
-                    </Button>
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
           </Stack>
+        ) : null}
+
+        {tab === 'analytics' ? (
+          <Card variant="outlined">
+            <CardContent>
+              <Stack spacing={1.25}>
+                <Typography variant="h6">Аналитика</Typography>
+                <Typography color="text.secondary">
+                  Графики и статистика доступны на отдельной странице.
+                </Typography>
+                <Box>
+                  <Button component={Link} to={`/organizations/${organizationId}/analytics`} variant="contained">
+                    Открыть аналитику
+                  </Button>
+                </Box>
+              </Stack>
+            </CardContent>
+          </Card>
         ) : null}
 
         {tab === 'members' ? (

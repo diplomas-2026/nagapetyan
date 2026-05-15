@@ -4,6 +4,7 @@ export function SectionTabs({ value, onChange, showHistory = false }) {
   return (
     <Tabs value={value} onChange={(_, nextValue) => onChange(nextValue)} sx={{ mb: 3 }}>
       <Tab value="overview" label="Обзор" />
+      <Tab value="analytics" label="Аналитика" />
       <Tab value="members" label="Сотрудники" />
       <Tab value="reports" label="Отправления" />
       {showHistory ? <Tab value="history" label="История действий" /> : null}
