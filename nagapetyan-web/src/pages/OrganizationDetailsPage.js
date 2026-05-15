@@ -335,9 +335,9 @@ export function OrganizationDetailsPage() {
           <Card variant="outlined">
             <CardContent>
               <Stack spacing={2}>
-                <Typography variant="h6">Граф точек маршрутов</Typography>
+                <Typography variant="h6">Карта маршрутов</Typography>
                 <Typography color="text.secondary">
-                  На графе показаны наиболее частые пункты отправки и назначения этой организации. Нажимай на точки, чтобы открыть их аналитику.
+                  Здесь показаны наиболее частые пункты отправки и назначения этой организации. Нажимай на точки, чтобы открыть их аналитику.
                 </Typography>
                 <OrganizationRouteGraph
                   organizationName={organization?.name}
