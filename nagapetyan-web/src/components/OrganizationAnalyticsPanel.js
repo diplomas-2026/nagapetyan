@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import {
   Area,
@@ -70,19 +70,22 @@ function useMeasuredWidth() {
   const ref = useRef(null);
   const [width, setWidth] = useState(0);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = ref.current;
     if (!element) {
       return undefined;
     }
 
     const update = () => {
-      setWidth(Math.max(0, Math.floor(element.getBoundingClientRect().width)));
+      const nextWidth = Math.max(0, Math.floor(element.getBoundingClientRect().width));
+      setWidth((current) => (current === nextWidth ? current : nextWidth));
     };
 
     update();
 
-    const observer = new ResizeObserver(update);
+    const observer = new ResizeObserver(() => {
+      update();
+    });
     observer.observe(element);
 
     return () => observer.disconnect();
