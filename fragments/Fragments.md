@@ -3,9 +3,31 @@
 ### [Скрин кода](./img_1.png)
 
 ```java
-@PostMapping("/login")
-public AuthResponse login(@Valid @RequestBody LoginRequest request) {
-    return authService.login(request);
+public AuthResponse login(LoginRequest request) {
+    AuthAccount account = store.findAccountByLogin(request.login());
+    if (account == null || !account.passwordHash().equals(hashPassword(request.password()))) {
+        throw new ResponseStatusException(UNAUTHORIZED, "Неверный логин или пароль");
+    }
+
+    String token = UUID.randomUUID().toString().replace("-", "");
+    store.saveSession(new AuthSession(
+            token,
+            account.role(),
+            account.organizationId(),
+            account.login(),
+            account.fullName()));
+
+    OrganizationMember member = store.findMemberByLogin(account.login());
+    AuthUserResponse user = new AuthUserResponse(
+            member == null ? null : member.getId(),
+            account.login(),
+            account.fullName(),
+            null,
+            account.position(),
+            account.role(),
+            account.organizationId(),
+            null);
+    return new AuthResponse(token, user);
 }
 ```
 
